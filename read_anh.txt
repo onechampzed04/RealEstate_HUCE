@@ -1,0 +1,113 @@
+
+# Real Estate Pro - Nền tảng Giao dịch và Định giá Bất động sản
+
+Đây là một ứng dụng web toàn diện được xây dựng để phục vụ cho việc mua bán, cho thuê và định giá bất động sản. Dự án sử dụng React ở frontend và Node.js/Express ở backend, với MongoDB làm cơ sở dữ liệu.
+
+## ✨ Tính năng chính
+
+-   **Duyệt và Lọc Bất động sản**: Tìm kiếm và lọc các danh sách bất động sản theo nhiều tiêu chí.
+-   **Xem chi tiết**: Trang chi tiết cho mỗi bất động sản với đầy đủ thông tin, hình ảnh và thông tin liên hệ.
+-   **Công cụ Định giá**: Một công cụ đơn giản để ước tính giá trị của một bất động sản dựa trên các thuộc tính của nó.
+-   **Xác thực người dùng**: Đăng ký, đăng nhập, và quản lý tài khoản người dùng sử dụng JWT.
+-   **Giao diện Hiện đại**: Xây dựng với Tailwind CSS để có một thiết kế responsive và đẹp mắt.
+
+## 🛠️ Công nghệ sử dụng
+
+-   **Frontend**: React, TypeScript, Vite, React Router, Tailwind CSS
+-   **Backend**: Node.js, Express.js, MongoDB, Mongoose
+-   **Xác thực**: JSON Web Tokens (JWT), bcryptjs
+-   **Thu thập dữ liệu (dự kiến)**: Python (sử dụng Scrapy, BeautifulSoup)
+
+## 🚀 Bắt đầu
+
+Làm theo các bước dưới đây để cài đặt và chạy dự án trên máy của bạn.
+
+### Yêu cầu tiên quyết
+
+Trước khi bắt đầu, hãy chắc chắn rằng bạn đã cài đặt các công cụ sau trên hệ thống của mình:
+-   [Node.js](https://nodejs.org/) (phiên bản 14.x trở lên)
+-   [MongoDB](https://www.mongodb.com/try/download/community) (hãy chắc chắn rằng service MongoDB đang chạy)
+-   [Git](https://git-scm.com/)
+
+### Cài đặt
+
+1.  **Clone repository**
+
+    Mở terminal của bạn và clone dự án về máy:
+    ```bash
+    git clone https://github.com/skibidi dom dom dom/real-estate-pro.git
+    cd real-estate-pro
+    ```
+
+2.  **Cài đặt Backend**
+
+    Backend server cần được cài đặt các thư viện riêng.
+    ```bash
+    # Di chuyển vào thư mục backend
+    cd backend
+
+    # Cài đặt các dependencies từ package.json
+    npm install
+    ```
+    *(Tùy chọn)*: Để tùy chỉnh các biến môi trường (như chuỗi kết nối MongoDB hoặc khóa bí mật JWT), bạn có thể tạo một file `.env` trong thư mục `backend` và thêm vào các biến sau:
+    ```
+    MONGO_URI=mongodb://localhost:27017/batdongsan
+    JWT_SECRET=your_super_secret_key
+    ```
+
+3.  **Cài đặt Frontend**
+
+    Bây giờ, hãy cài đặt các thư viện cho frontend từ thư mục gốc của dự án.
+    ```bash
+    # Quay lại thư mục gốc của dự án
+    cd ..
+
+    # Cài đặt các dependencies từ package.json
+    npm install
+    ```
+
+## 🏃 Chạy ứng dụng
+
+Để chạy ứng dụng, bạn sẽ cần mở **hai cửa sổ terminal** riêng biệt: một cho backend và một cho frontend.
+
+### 1. Chạy Backend Server
+
+Trong cửa sổ terminal đầu tiên, từ thư mục gốc:
+
+```bash
+# Di chuyển vào thư mục backend
+cd backend
+
+# (Chạy một lần đầu tiên) Nạp dữ liệu mẫu vào database
+npm run data:import
+
+# Khởi động server
+npm start
+```
+Bạn sẽ thấy thông báo `Server running on port 5001`. Giữ cửa sổ terminal này mở.
+
+### 2. Chạy Frontend Server
+
+Trong cửa sổ terminal **thứ hai**, từ thư mục gốc:
+```bash
+# Khởi động server phát triển của Vite
+npm run dev
+```
+Bạn sẽ thấy thông báo server frontend đang chạy, thường là tại `http://localhost:5173`.
+
+### 3. Xem kết quả
+Mở trình duyệt của bạn và truy cập vào địa chỉ `http://localhost:5173` để xem ứng dụng hoạt động.
+
+## 📜 Các script có sẵn
+
+### Backend (`/backend`)
+-   `npm start`: Chạy server Express.
+-   `npm run server`: Chạy server với `nodemon` để tự động khởi động lại khi có thay đổi code.
+-   `npm run data:import`: Xóa dữ liệu cũ và nạp dữ liệu mẫu từ `backend/data/properties.js` vào database.
+-   `npm run data:destroy`: Xóa toàn bộ dữ liệu trong các collection `properties` và `users`.
+
+### Frontend (`/`)
+-   `npm run dev`: Khởi động server phát triển Vite với Hot-Module-Replacement.
+-   `npm run build`: Build ứng dụng React cho môi trường production.
+-   `npm run preview`: Xem trước bản build production.
+
