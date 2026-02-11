@@ -11,10 +11,22 @@ async function handleResponse(response: Response) {
     return data;
 }
 
-export const fetchProperties = async (): Promise<Property[]> => {
-    const response = await fetch(`${BASE_URL}/properties`);
-    return handleResponse(response);
+export const fetchProperties = async (
+  keyword?: string,
+  type?: string,
+  price?: string
+): Promise<Property[]> => {
+
+  const params = new URLSearchParams();
+
+  if (keyword) params.append("keyword", keyword);
+  if (type) params.append("type", type);
+  if (price) params.append("price", price);
+
+  const response = await fetch(`${BASE_URL}/properties?${params.toString()}`);
+  return handleResponse(response);
 };
+
 
 export const fetchFeaturedProperties = async (): Promise<Property[]> => {
     const response = await fetch(`${BASE_URL}/properties/featured`);
