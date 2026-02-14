@@ -64,6 +64,28 @@ class UserService {
       throw error;
     }
   }
+  async updateUserProfile(userId, name, email, password) {
+    const user = await User.findById(userId);
+    
+    if (user) {
+      user.name = name;
+      user.email = email;
+      if (password) {
+        user.password = password;
+      }
+      const updatedUser = await user.save();
+      return {
+        _id: updatedUser._id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        token: generateToken(updatedUser._id),
+      };
+    } else {
+      const error = new Error('User not found');
+      error.statusCode = 404;
+      throw error;
+    }
+  }
 }
 
 export default new UserService();

@@ -13,6 +13,7 @@ import ProfilePage from './pages/ProfilePage';
 import SubmitPropertyPage from './pages/SubmitPropertyPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PrivateRoute from './components/PrivateRoute';
+import EditProfilePage from './pages/EditProfilePage';
 
 function App() {
   return (
@@ -30,6 +31,11 @@ function App() {
             <Route path="/profile" element={
               <PrivateRoute>
                 <ProfilePage />
+              </PrivateRoute>
+            } />
+            <Route path="/profile/edit" element={
+              <PrivateRoute>
+                <EditProfilePage /> 
               </PrivateRoute>
             } />
             <Route path="/submit-property" element={

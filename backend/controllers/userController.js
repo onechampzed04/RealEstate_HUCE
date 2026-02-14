@@ -35,5 +35,12 @@ const getUserProfile = asyncHandler(async (req, res) => {
 
   res.json(result);
 });
+const updateUserProfile = asyncHandler(async (req, res) => {
+  const { name, email, password } = req.body;
 
-export { authUser, registerUser, getUserProfile };
+  const result = await userService.updateUserProfile(req.user._id, name, email, password);
+
+  res.json(result);
+});
+
+export { authUser, registerUser, getUserProfile, updateUserProfile };

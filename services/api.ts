@@ -59,3 +59,16 @@ export const register = async (name: string, email: string, password: string) =>
     });
     return handleResponse(response);
 };
+
+export const updateUserProfile = async (name: string, email: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/profile/edit`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ name, email }),
+    });
+    const data = await handleResponse(response);
+    return data;
+}
