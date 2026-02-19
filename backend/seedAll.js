@@ -1,104 +1,145 @@
 import mongoose from "mongoose";
-import bcrypt from "bcryptjs";
 import dotenv from "dotenv";
-import connectDB from "./config/db.js";
 
 import User from "./models/UserModel.js";
-import Listing from "./models/ListingModel.js";
-import Favorite from "./models/FavoriteModel.js";
-import ContactMessage from "./models/ContactMessageModel.js";
-import ListingImage from "./models/ListingImageModel.js";
 import Package from "./models/PackageModel.js";
+import Listing from "./models/ListingModel.js";
 import Payment from "./models/PaymentModel.js";
+import Favorite from "./models/FavoriteModel.js";
 import Report from "./models/ReportModel.js";
 
 dotenv.config();
 
-const seedDatabase = async () => {
+const seed = async () => {
   try {
-    console.log("🚀 Seeding database...");
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log("MongoDB Connected");
 
+    // ⚠ Reset database (chỉ dùng cho dev)
     await Promise.all([
       User.deleteMany(),
-      Listing.deleteMany(),
-      Favorite.deleteMany(),
-      ContactMessage.deleteMany(),
-      ListingImage.deleteMany(),
       Package.deleteMany(),
+      Listing.deleteMany(),
       Payment.deleteMany(),
+      Favorite.deleteMany(),
       Report.deleteMany(),
     ]);
 
-    const hashedPassword = await bcrypt.hash("123456", 10);
+    console.log("Old data removed");
 
+    // =========================
+    // 1️⃣ CREATE PACKAGES
+    // =========================
+    const basicPackage = await Package.create({
+      name: "Basic",
+      maxPostsPerDay: 3,
+      price: 100000,
+      durationDays: 30,
+    });
+
+    const premiumPackage = await Package.create({
+      name: "Premium",
+      maxPostsPerDay: 10,
+      price: 300000,
+      durationDays: 30,
+      allowHotPost: true,
+      autoApprove: true,
+    });
+
+    // =========================
+    // 2️⃣ CREATE USERS
+    // =========================
     const user = await User.create({
-      name: "Nguyễn Văn Admin",
+      name: "Nguyen Van Kien",
+      email: "kien@test.com",
+      password: "123456",
+      package: basicPackage._id,
+    });
+
+    const admin = await User.create({
+      name: "Admin",
       email: "admin@test.com",
-      password: hashedPassword,
+      password: "123456",
+      role: "ADMIN",
     });
 
-    const user2 = await User.create({
-      name: "Trần Văn User",
-      email: "user@test.com",
-      password: hashedPassword,
+    // =========================
+    // 3️⃣ CREATE LISTINGS
+    // =========================
+    const listing1 = await Listing.create({
+      user: user._id,
+      title: "Bán căn hộ Quận 7",
+      description: "Căn hộ view sông đẹp",
+      type: "SALE",
+      slug: "ban-can-ho-quan-7",
+      propertyType: "APARTMENT",
+      price: 2500000000,
+      area: 75,
+      location: {
+        type: "Point",
+        coordinates: [106.7218, 10.7326],
+        city: "Ho Chi Minh",
+        district: "District 7",
+        ward: "Tan Phu",
+        address: "123 Nguyen Huu Tho",
+      },
+      status: "APPROVED",
     });
 
-    const listing = await Listing.create({
-      title: "Biệt Thự Cao Cấp Thảo Điền",
-      price: 25000000000,
-      address: "123 Thảo Điền",
-      city: "TP Hồ Chí Minh",
-      bedrooms: 5,
-      bathrooms: 4,
-      area: 450,
-      description: "Biệt thự sang trọng có hồ bơi riêng và sân vườn.",
+    const listing2 = await Listing.create({
+      user: user._id,
+      title: "Cho thuê nhà Quận 2",
+      type: "RENT",
+      slug: "cho-thue-nha-quan-2",
+      propertyType: "HOUSE",
+      price: 20000000,
+      area: 120,
+      location: {
+        type: "Point",
+        coordinates: [106.75, 10.79],
+        city: "Ho Chi Minh",
+        district: "District 2",
+      },
+      status: "APPROVED",
     });
 
-    await Favorite.create({
-      user: user2._id,
-      listing: listing._id,
-    });
-
-    await ListingImage.create({
-      listing: listing._id,
-      imageUrl: "https://picsum.photos/800/600",
-    });
-
-    const pkg = await Package.create({
-      name: "Premium 30 ngày",
-      price: 500000,
-      duration: 30,
-    });
-
+    // =========================
+    // 4️⃣ CREATE PAYMENT
+    // =========================
     await Payment.create({
-      user: user2._id,
-      package: pkg._id,
-      amount: 500000,
-      status: "Paid",
+      user: user._id,
+      package: basicPackage._id,
+      amount: basicPackage.price,
+      paymentMethod: "VNPAY",
+      transactionId: "TXN123456",
+      status: "SUCCESS",
+      paidAt: new Date(),
     });
 
-    await ContactMessage.create({
-      name: "Lê Văn A",
-      email: "contact@gmail.com",
-      message: "Tôi muốn xem nhà này vào cuối tuần.",
+    // =========================
+    // 5️⃣ CREATE FAVORITE
+    // =========================
+    await Favorite.create({
+      user: user._id,
+      listing: listing2._id,
     });
 
+    // =========================
+    // 6️⃣ CREATE REPORT
+    // =========================
     await Report.create({
-      listing: listing._id,
-      reason: "Thông tin sai lệch",
+      reporter: user._id,
+      listing: listing1._id,
+      reason: "Thông tin không chính xác",
+      status: "pending",
     });
 
-    console.log("🎉 Seed database thành công!");
-    process.exit();
+    console.log("✅ Seed data created successfully!");
+    process.exit(0);
   } catch (error) {
-    console.error("❌ Seed failed:", error);
+    console.error("❌ Seed error:", error);
     process.exit(1);
   }
 };
 
-const runSeed = async () => {
-  await connectDB(); // ✅ QUAN TRỌNG
-  await seedDatabase();
-};
-
-runSeed();
+seed();

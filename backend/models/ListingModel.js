@@ -11,7 +11,7 @@ const listingSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, trim: true },
 
-    slug: { type: String, unique: true },
+    slug: { type: String, unique: true, sparse: true },
 
     type: {
       type: String,
