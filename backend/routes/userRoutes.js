@@ -4,12 +4,14 @@ const router = express.Router();
 import {
   authUser,
   registerUser,
+  verifyOtp,
   getUserProfile,
   updateUserProfile
 } from '../controllers/userController.js';
 import { protect } from '../middleware/authMiddleware.js';
 
 router.route('/register').post(registerUser);
+router.route('/verify-otp').post(verifyOtp);
 router.post('/login', authUser);
 router.put('/profile/edit', protect, updateUserProfile);
 router.route('/profile').get(protect, getUserProfile);

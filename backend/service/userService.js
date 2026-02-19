@@ -48,6 +48,32 @@ class UserService {
     }
   }
 
+  // Create user directly (used after OTP verification)
+  async createUser(name, email, password) {
+    const userExists = await User.findOne({ email });
+
+    if (userExists) {
+      const error = new Error('User already exists');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const user = await User.create({ name, email, password });
+
+    if (user) {
+      return {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        token: generateToken(user._id),
+      };
+    } else {
+      const error = new Error('Invalid user data');
+      error.statusCode = 400;
+      throw error;
+    }
+  }
+
   // Logic lấy Profile
   async getUserProfile(userId) {
     const user = await User.findById(userId);

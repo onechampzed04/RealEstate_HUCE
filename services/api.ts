@@ -60,6 +60,17 @@ export const register = async (name: string, email: string, password: string) =>
     return handleResponse(response);
 };
 
+export const verifyOtp = async (email: string, otp: string) => {
+    const response = await fetch(`${BASE_URL}/users/verify-otp`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
+    });
+    return handleResponse(response);
+};
+
 export const updateUserProfile = async (name: string, email: string, token: string) => {
     const response = await fetch(`${BASE_URL}/users/profile/edit`, {
         method: 'PUT',

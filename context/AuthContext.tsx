@@ -15,6 +15,7 @@ interface AuthContextType {
   logout: () => void;
   register: (name: string, email: string, pass: string) => Promise<void>;
   updateUser: (userData: User) => void;
+  completeRegister: (userInfo: any) => void;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -49,9 +50,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const register = async (name: string, email: string, password: string): Promise<void> => {
-    const userInfo = await apiRegister(name, email, password);
+    // Initiate registration (sends OTP to email). Completion happens in verify step.
+    await apiRegister(name, email, password);
+  };
+
+  const completeRegister = (userInfo: any) => {
     localStorage.setItem('userInfo', JSON.stringify(userInfo));
-    // FIX: The user object was missing the `_id` property, which is required by the `User` type.
     setUser({id: userInfo._id, _id: userInfo._id, name: userInfo.name, email: userInfo.email});
     setToken(userInfo.token);
   };
@@ -74,7 +78,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, loading, login, logout, register, updateUser }}>
+    <AuthContext.Provider value={{ user, token, loading, login, logout, register, completeRegister, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
