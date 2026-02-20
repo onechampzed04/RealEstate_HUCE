@@ -2,13 +2,43 @@
 import asyncHandler from 'express-async-handler';
 import Property from '../models/PropertyModel.js';
 
-// @desc    Fetch all properties
+// @desc    Fetch all properties (with search)
 // @route   GET /api/properties
 // @access  Public
 const getProperties = asyncHandler(async (req, res) => {
-  const properties = await Property.find({});
+  const { keyword, type, price } = req.query;
+
+  const filter = {};
+
+  // Tìm theo thành phố hoặc địa chỉ
+  if (keyword) {
+    filter.$or = [
+      { city: { $regex: keyword, $options: 'i' } },
+      { address: { $regex: keyword, $options: 'i' } },
+    ];
+  }
+
+  // Lọc theo loại hình
+  if (type && type !== 'all') {
+    filter.type = type;
+  }
+
+  // Lọc theo mức giá
+  if (price) {
+    if (price === 'under5') {
+      filter.price = { $lt: 5000000000 };
+    } else if (price === '5to10') {
+      filter.price = { $gte: 5000000000, $lte: 10000000000 };
+    } else if (price === 'above10') {
+      filter.price = { $gt: 10000000000 };
+    }
+  }
+
+  const properties = await Property.find(filter);
   res.json(properties);
 });
+
+
 
 // @desc    Fetch featured properties (first 3)
 // @route   GET /api/properties/featured
