@@ -13,7 +13,9 @@ import ProfilePage from './pages/ProfilePage';
 import SubmitPropertyPage from './pages/SubmitPropertyPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PrivateRoute from './components/PrivateRoute';
-import EditProfilePage from './pages/EditProfilePage';
+import EditNamePage from './pages/EditNamePage';
+import ChangeEmailPage from './pages/ChangeEmailPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 
 function App() {
   return (
@@ -33,9 +35,19 @@ function App() {
                 <ProfilePage />
               </PrivateRoute>
             } />
-            <Route path="/profile/edit" element={
+            <Route path="/profile/edit-name" element={
               <PrivateRoute>
-                <EditProfilePage /> 
+                <EditNamePage /> 
+              </PrivateRoute>
+            } />
+            <Route path="/profile/change-email" element={
+              <PrivateRoute>
+                <ChangeEmailPage /> 
+              </PrivateRoute>
+            } />
+            <Route path="/profile/password-change" element={
+              <PrivateRoute>
+                <ChangePasswordPage /> 
               </PrivateRoute>
             } />
             <Route path="/submit-property" element={

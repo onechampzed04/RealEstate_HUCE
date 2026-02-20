@@ -71,6 +71,30 @@ export const verifyOtp = async (email: string, otp: string) => {
     return handleResponse(response);
 };
 
+export const requestPasswordChange = async (newPassword: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/request-password-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newPassword }),
+    });
+    return handleResponse(response);
+};
+
+export const verifyPasswordChangeOtp = async (otp: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/verify-password-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ otp }),
+    });
+    return handleResponse(response);
+};
+
 export const updateUserProfile = async (name: string, email: string, token: string) => {
     const response = await fetch(`${BASE_URL}/users/profile/edit`, {
         method: 'PUT',
@@ -83,3 +107,51 @@ export const updateUserProfile = async (name: string, email: string, token: stri
     const data = await handleResponse(response);
     return data;
 }
+
+export const requestNameChange = async (newName: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/request-name-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newName }),
+    });
+    return handleResponse(response);
+};
+
+export const verifyNameChangeOtp = async (otp: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/verify-name-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ otp }),
+    });
+    return handleResponse(response);
+};
+
+export const requestEmailChange = async (newEmail: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/request-email-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newEmail }),
+    });
+    return handleResponse(response);
+};
+
+export const verifyEmailChangeOtp = async (otp: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/verify-email-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ otp }),
+    });
+    return handleResponse(response);
+};

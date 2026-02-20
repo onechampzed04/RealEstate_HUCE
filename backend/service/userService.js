@@ -112,6 +112,77 @@ class UserService {
       throw error;
     }
   }
+
+  // Change password after OTP verification
+  async changePasswordAfterOtp(userId, newPassword) {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      const error = new Error('User not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    user.password = newPassword;
+    const updatedUser = await user.save();
+
+    return {
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      message: 'Password changed successfully',
+    };
+  }
+
+  // Change name after OTP verification
+  async changeNameAfterOtp(userId, newName) {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      const error = new Error('User not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    user.name = newName;
+    const updatedUser = await user.save();
+
+    return {
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      message: 'Name changed successfully',
+    };
+  }
+
+  // Change email after OTP verification
+  async changeEmailAfterOtp(userId, newEmail) {
+    const user = await User.findById(userId);
+
+    if (!user) {
+      const error = new Error('User not found');
+      error.statusCode = 404;
+      throw error;
+    }
+
+    // Check if new email is already taken
+    const existingUser = await User.findOne({ email: newEmail });
+    if (existingUser && existingUser._id.toString() !== userId) {
+      const error = new Error('Email already in use');
+      error.statusCode = 400;
+      throw error;
+    }
+
+    user.email = newEmail;
+    const updatedUser = await user.save();
+
+    return {
+      _id: updatedUser._id,
+      name: updatedUser.name,
+      email: updatedUser.email,
+      message: 'Email changed successfully',
+    };
+  }
 }
 
 export default new UserService();
