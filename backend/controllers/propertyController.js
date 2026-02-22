@@ -12,11 +12,13 @@ const getProperties = asyncHandler(async (req, res) => {
 
   // Tìm theo thành phố hoặc địa chỉ
   if (keyword) {
-    filter.$or = [
-      { city: { $regex: keyword, $options: 'i' } },
-      { address: { $regex: keyword, $options: 'i' } },
-    ];
-  }
+  filter.$or = [
+    { title: { $regex: keyword, $options: 'i' } },
+    { city: { $regex: keyword, $options: 'i' } },
+    { address: { $regex: keyword, $options: 'i' } },
+    { description: { $regex: keyword, $options: 'i' } },
+  ];
+}
 
   // Lọc theo loại hình
   if (type && type !== 'all') {
