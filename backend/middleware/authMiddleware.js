@@ -1,6 +1,5 @@
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
-
 dotenv.config();
 import asyncHandler from "express-async-handler";
 import User from "../models/UserModel.js";

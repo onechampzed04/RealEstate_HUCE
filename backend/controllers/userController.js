@@ -1,8 +1,7 @@
-
-import asyncHandler from 'express-async-handler';
-import generateToken from '../utils/generateToken.js';
-import User from '../models/UserModel.js';
-import userService from '../service/userService.js';
+import asyncHandler from "express-async-handler";
+import generateToken from "../utils/generateToken.js";
+import User from "../models/UserModel.js";
+import userService from "../service/user.service.js";
 
 // @desc    Auth user & get token
 // @route   POST /api/users/login

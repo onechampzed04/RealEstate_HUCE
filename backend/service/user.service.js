@@ -1,5 +1,5 @@
-import User from '../models/UserModel.js';
-import generateToken from '../utils/generateToken.js';
+import User from "../models/UserModel.js";
+import generateToken from "../utils/generateToken.js";
 
 class UserService {
   // Logic Đăng nhập
@@ -16,7 +16,7 @@ class UserService {
       };
     } else {
       // Quăng lỗi để Controller hoặc Middleware bắt
-      const error = new Error('Invalid email or password');
+      const error = new Error("Invalid email or password");
       error.statusCode = 401;
       throw error;
     }
@@ -27,7 +27,7 @@ class UserService {
     const userExists = await User.findOne({ email });
 
     if (userExists) {
-      const error = new Error('User already exists');
+      const error = new Error("User already exists");
       error.statusCode = 400;
       throw error;
     }
@@ -42,7 +42,7 @@ class UserService {
         token: generateToken(user._id),
       };
     } else {
-      const error = new Error('Invalid user data');
+      const error = new Error("Invalid user data");
       error.statusCode = 400;
       throw error;
     }
@@ -59,7 +59,7 @@ class UserService {
         email: user.email,
       };
     } else {
-      const error = new Error('User not found');
+      const error = new Error("User not found");
       error.statusCode = 404;
       throw error;
     }
