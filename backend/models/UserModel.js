@@ -1,42 +1,72 @@
+import mongoose from "mongoose";
+import bcrypt from "bcrypt";
 
-import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
-
-const userSchema = mongoose.Schema(
+const userSchema = new mongoose.Schema(
   {
     name: {
       type: String,
       required: true,
+      trim: true,
     },
+
     email: {
       type: String,
       required: true,
       unique: true,
+      lowercase: true,
+      trim: true,
     },
+
     password: {
       type: String,
       required: true,
+      select: false, // không trả password khi query
+    },
+
+    phone: {
+      type: String,
+      trim: true,
+    },
+
+    role: {
+      type: String,
+      enum: ["USER", "ADMIN"],
+      default: "USER",
+    },
+
+    package: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Package",
+      default: null,
+    },
+
+    packageExpiredAt: {
+      type: Date,
+    },
+
+    isActive: {
+      type: Boolean,
+      default: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true },
 );
 
-// Method to compare entered password with hashed password
-userSchema.methods.matchPassword = async function (enteredPassword) {
-  return await bcrypt.compare(enteredPassword, this.password);
-};
-
-// Middleware to hash password before saving a new user
-userSchema.pre('save', async function (next) {
-  if (!this.isModified('password')) {
-    next();
-  }
-  const salt = await bcrypt.genSalt(10);
-  this.password = await bcrypt.hash(this.password, salt);
+// 🔐 Hash password trước khi save
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return next();
+  this.password = await bcrypt.hash(this.password, 10);
+  next();
 });
 
-const User = mongoose.model('User', userSchema);
+// 🔎 So sánh password khi login
+userSchema.methods.comparePassword = async function (candidatePassword) {
+  return bcrypt.compare(candidatePassword, this.password);
+};
+
+// 📈 Index cho email
+userSchema.index({ email: 1 });
+
+const User = mongoose.model("User", userSchema);
 
 export default User;
