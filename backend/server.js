@@ -21,7 +21,7 @@ app.use(express.json());
 
 app.use("/api/listings", listingRoutes);
 
-app.use("/api/auth", authRoutes);
+app.use("/api/users", authRoutes);
 
 app.use("/api/upload", uploadRoutes);
 

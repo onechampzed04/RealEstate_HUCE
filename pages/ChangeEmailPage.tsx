@@ -64,7 +64,7 @@ const ChangeEmailPage: React.FC = () => {
             const { verifyEmailChangeOtp } = await import('../services/api');
             const result = await verifyEmailChangeOtp(otp, token || '');
             console.log('[Verify Email Change] Email changed successfully');
-            updateUser(result);
+            updateUser(result.user || result);
             navigate('/profile');
         } catch (err: any) {
             console.error('[Verify Email Change] Error:', err);

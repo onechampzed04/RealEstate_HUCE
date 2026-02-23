@@ -8,7 +8,7 @@ async function handleResponse(response: Response) {
     if (!response.ok) {
         throw new Error(data.message || 'An API error occurred');
     }
-    return data;
+    return data.data || data;
 }
 
 export const fetchProperties = async (
@@ -61,13 +61,24 @@ export const login = async (email: string, password: string) => {
     return handleResponse(response);
 };
 
-export const register = async (name: string, email: string, password: string) => {
+export const register = async (name: string, email: string, password: string, phone: string = '') => {
     const response = await fetch(`${BASE_URL}/users/register`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, phone }),
+    });
+    return handleResponse(response);
+};
+
+export const verifyRegistrationOtp = async (email: string, otp: string) => {
+    const response = await fetch(`${BASE_URL}/users/verify-registration-otp`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, otp }),
     });
     return handleResponse(response);
 };

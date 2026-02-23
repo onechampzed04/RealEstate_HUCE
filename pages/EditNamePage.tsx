@@ -58,7 +58,7 @@ const EditNamePage: React.FC = () => {
             const { verifyNameChangeOtp } = await import('../services/api');
             const result = await verifyNameChangeOtp(otp, token || '');
             console.log('[Verify Name Change] Name changed successfully');
-            updateUser(result);
+            updateUser(result.user || result);
             navigate('/profile');
         } catch (err: any) {
             console.error('[Verify Name Change] Error:', err);

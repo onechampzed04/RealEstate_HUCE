@@ -6,6 +6,7 @@ import Button from '../components/Button';
 
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -22,7 +23,7 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     try {
       console.log('[Register] Submitting registration form...');
-      await register(name, email, password); // initiates OTP send
+      await register(name, email, password, phone); // initiates OTP send
       console.log('[Register] OTP sent successfully, switching to OTP screen');
       setStep('otp');
     } catch (err: any) {
@@ -39,8 +40,8 @@ const RegisterPage: React.FC = () => {
     setLoading(true);
     try {
       console.log('[Verify OTP] Verifying OTP for:', email);
-      const { verifyOtp } = await import('../services/api');
-      const userInfo = await verifyOtp(email, otp);
+      const { verifyRegistrationOtp } = await import('../services/api');
+      const userInfo = await verifyRegistrationOtp(email, otp);
       console.log('[Verify OTP] OTP verified, user created:', userInfo);
       completeRegister(userInfo);
       navigate('/profile');
@@ -75,6 +76,20 @@ const RegisterPage: React.FC = () => {
                   placeholder="Họ và tên"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="phone" className="sr-only">Số điện thoại</label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="text"
+                  autoComplete="tel"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Số điện thoại"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
                 />
               </div>
               <div>
