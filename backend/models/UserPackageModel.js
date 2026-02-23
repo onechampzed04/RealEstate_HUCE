@@ -32,5 +32,9 @@ const userPackageSchema = new mongoose.Schema(
   { timestamps: true },
 );
 userPackageSchema.index({ user: 1, status: 1 });
+userPackageSchema.index(
+  { user: 1, status: 1 },
+  { unique: true, partialFilterExpression: { status: "ACTIVE" } },
+);
 const UserPackage = mongoose.model("UserPackage", userPackageSchema);
 export default UserPackage;

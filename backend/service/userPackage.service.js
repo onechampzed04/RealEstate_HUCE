@@ -9,8 +9,8 @@ export default class UserPackageService {
     if (!userId || !packageId) {
       throw new Error("Missing userId or packageId");
     }
-    const session = await mongoose.startSession();
-    session.startTransaction();
+    // const session = await mongoose.startSession();
+    // session.startTransaction();
 
     const existingActive = await UserPackage.findOne({
       user: userId,
@@ -45,46 +45,5 @@ export default class UserPackageService {
 
     await userPackage.save();
     return userPackage;
-  }
-
-  async activatePackage(paymentId) {
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
-    try {
-      const payment = await Payment.findById(paymentId)
-        .populate("package")
-        .session(session);
-
-      if (!payment) throw new Error("Payment not found");
-
-      payment.status = "SUCCESS";
-      await payment.save({ session });
-
-      const userPackage = await UserPackage.findOne({
-        payment: payment._id,
-      })
-        .populate("package")
-        .session(session);
-
-      const now = new Date();
-      const endDate = new Date();
-      endDate.setDate(now.getDate() + userPackage.package.durationDays);
-
-      userPackage.status = "ACTIVE";
-      userPackage.startDate = now;
-      userPackage.endDate = endDate;
-
-      await userPackage.save({ session });
-
-      await session.commitTransaction();
-      session.endSession();
-
-      return userPackage;
-    } catch (error) {
-      await session.abortTransaction();
-      session.endSession();
-      throw error;
-    }
   }
 }

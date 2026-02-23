@@ -43,6 +43,6 @@ const paymentSchema = new mongoose.Schema(
   },
   { timestamps: true },
 );
-
+paymentSchema.index({ user: 1, status: 1 });
 const Payment = mongoose.model("Payment", paymentSchema);
 export default Payment;
