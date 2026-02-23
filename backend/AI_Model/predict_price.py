@@ -1,48 +1,52 @@
-# predict_price.py (PHIÊN BẢN CUỐI CÙNG - HỖ TRỢ FEATURE NÂNG CAO)
+# predict_price.py (PHIÊN BẢN CUỐI CÙNG - Hỗ trợ sáp nhập & tăng trưởng)
 
 import sys
 import json
 import pickle
 import numpy as np
 import pandas as pd
-from catboost import CatBoostRegressor
 import re
 import io
 
-# Cấu hình UTF-8 cho tất cả các luồng
+from catboost import CatBoostRegressor
+# Cấu hình UTF-8 để xử lý tiếng Việt trên mọi môi trường
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
 
+# <<<--- HỆ SỐ TĂNG TRƯỞNG THỊ TRƯỜNG --->>>
+# Cập nhật con số này hàng tuần. Ví dụ: 1.002 = tăng 0.2%
+MARKET_GROWTH_FACTOR = 1.0
+
 # =============================================================================
 # SECTION 1: TẢI MODEL VÀ CÁC BIẾN TIỀN XỬ LÝ (NÂNG CAO)
-# =============================================================================
+# =============================================================================pip install catboost
 try:
-    MODEL_PATH = r"D:\batdongsan\RealEstate_HUCE\backend\AI_Model\catboost_model.cbm"
-    PICKLE_PATH = r"D:\batdongsan\RealEstate_HUCE\backend\AI_Model\preprocess_globals.pkl"
+    MODEL_PATH = r"E:\batdongsan\RealEstate_HUCE\backend\AI_Model\catboost_model.cbm"
+    PICKLE_PATH = r"E:\batdongsan\RealEstate_HUCE\backend\AI_Model\preprocess_globals.pkl"
     model = CatBoostRegressor()
     model.load_model(MODEL_PATH)
     with open(PICKLE_PATH, "rb") as f:
         globals_dict = pickle.load(f)
 
-    # Giải nén các biến mới và cũ
     features = globals_dict['features']
     numerical_cols = globals_dict['numerical_cols']
     cat_cols = globals_dict['cat_cols']
     district_medians = globals_dict['district_medians']
     overall_medians = globals_dict['overall_medians']
-    district_log_price_avg = globals_dict['district_log_price_avg'] # Mới
-    global_log_price_avg = globals_dict['global_log_price_avg'] # Mới
+    district_log_price_avg = globals_dict['district_log_price_avg']
+    global_log_price_avg = globals_dict['global_log_price_avg']
     good_dirs = globals_dict['good_dirs']
 except Exception as e:
     print(json.dumps({"success": False, "message": f"Lỗi nghiêm trọng khi tải model hoặc file pickle: {str(e)}"}))
     sys.exit(1)
 
 # =============================================================================
-# SECTION 2: HÀM TRÍCH XUẤT ĐỊA CHỈ ĐA CẤP (V5)
+# SECTION 2: "BỘ DỊCH" 2025 -> 2024 VÀ TRÍCH XUẤT
 # =============================================================================
+
 def extract_location_v5(address):
-    # ... (Sao chép y hệt hàm extract_location_v5 từ file training)
+    """Hàm chuyên gia, trích xuất địa chỉ theo cấu trúc 63 tỉnh thành cũ (2024)."""
     if pd.isna(address) or not isinstance(address, str) or not address.strip(): return 'Other', 'Other', 'Other'
     addr = address.lower().replace('.', '')
     parts = [p.strip() for p in addr.split(',')]
@@ -62,8 +66,52 @@ def extract_location_v5(address):
                 if name in part: found_city = code; break
     return found_city, found_district, found_sub_district
 
+
+def translate_and_extract_location(address):
+    """
+    "Bộ dịch" thông minh: Nhận địa chỉ theo cấu trúc MỚI (2025),
+    dịch ngược về cấu trúc CŨ (2024) và trích xuất.
+    """
+    if pd.isna(address) or not isinstance(address, str) or not address.strip():
+        return 'Other', 'Other', 'Other'
+    addr_lower = address.lower()
+    
+    # Bản đồ dịch ngược: Tên quận/huyện đặc trưng -> Tỉnh gốc của nó năm 2024
+    district_to_original_province_map = {
+        # Khu vực phía Bắc
+        'hà giang': 'Hà Giang', 'yên bái': 'Yên Bái', 'bắc kạn': 'Bắc Kạn',
+        'vĩnh phúc': 'Vĩnh Phúc', 'vĩnh yên': 'Vĩnh Phúc', 'phúc yên': 'Vĩnh Phúc',
+        'hòa bình': 'Hòa Bình', 'bắc giang': 'Bắc Giang', 'thái bình': 'Thái Bình',
+        'hải dương': 'Hải Dương', 'chí linh': 'Hải Dương', 'hà nam': 'Hà Nam', 'phủ lý': 'Hà Nam',
+        'nam định': 'Nam Định',
+        # Khu vực miền Trung
+        'quảng bình': 'Quảng Bình', 'đồng hới': 'Quảng Bình', 'quảng nam': 'Quảng Nam',
+        'tam kỳ': 'Quảng Nam', 'hội an': 'Quảng Nam', 'kon tum': 'Kon Tum', 'bình định': 'Bình Định',
+        'quy nhơn': 'Bình Định', 'phú yên': 'Phú Yên', 'tuy hòa': 'Phú Yên',
+        'ninh thuận': 'Ninh Thuận', 'phan rang': 'Ninh Thuận', 'đắk nông': 'Đắk Nông',
+        'gia nghĩa': 'Đắk Nông', 'bình thuận': 'Bình Thuận', 'phan thiết': 'Bình Thuận',
+        # Khu vực phía Nam
+        'bình dương': 'BD', 'thủ dầu một': 'BD', 'dĩ an': 'BD', 'thuận an': 'BD', 'tân uyên': 'BD',
+        'bà rịa': 'BRVT', 'vũng tàu': 'BRVT', 'bình phước': 'Bình Phước', 'đồng xoài': 'Bình Phước',
+        'long an': 'LA', 'tân an': 'LA', 'tiền giang': 'Tiền Giang', 'mỹ tho': 'Tiền Giang',
+        'sóc trăng': 'Sóc Trăng', 'hậu giang': 'Hậu Giang', 'vị thanh': 'Hậu Giang',
+        'bến tre': 'Bến Tre', 'trà vinh': 'Trà Vinh', 'bạc liêu': 'Bạc Liêu',
+        'kiên giang': 'Kiên Giang', 'rạch giá': 'Kiên Giang', 'hà tiên': 'Kiên Giang', 'phú quốc': 'Kiên Giang'
+    }
+
+    original_address = addr_lower
+    # Duyệt qua bản đồ dịch ngược
+    for district_name, original_province in district_to_original_province_map.items():
+        if district_name in original_address:
+            # Gắn thêm tên tỉnh gốc vào cuối địa chỉ để hàm V5 nhận dạng đúng
+            original_address += f", {original_province.lower()}"
+            break
+            
+    # Sử dụng hàm V5 (chuyên gia 2024) để trích xuất từ địa chỉ đã được "dịch"
+    return extract_location_v5(original_address)
+
 # =============================================================================
-# SECTION 3: HÀM MAIN (PHIÊN BẢN NÂNG CAO)
+# SECTION 3: HÀM MAIN (Sử dụng logic dịch thuật và feature nâng cao)
 # =============================================================================
 def main():
     try:
@@ -71,9 +119,9 @@ def main():
         df = pd.DataFrame([input_data])
         df.columns = df.columns.str.strip().str.replace(' ', '_').str.lower()
         
-        # 1. Trích xuất địa chỉ đa cấp
+        # 1. Áp dụng "bộ dịch"
         if 'address' in df.columns:
-            df['city'], df['district'], df['sub_district'] = zip(*df['address'].apply(extract_location_v5))
+            df['city'], df['district'], df['sub_district'] = zip(*df['address'].apply(translate_and_extract_location))
             df = df.drop(columns=['address'])
 
         # 2. Impute và fillna
@@ -81,12 +129,12 @@ def main():
             df[col] = pd.to_numeric(df.get(col, np.nan), errors='coerce')
             if pd.isna(df.at[0, col]):
                 district_name = df.at[0, 'district']
-                df.at[0, col] = district_medians[col].get(district_name, overall_medians[col])
+                df.at[0, col] = district_medians.get(district_name, overall_medians[col])
         for col in cat_cols:
              if col in df.columns:
                 df[col] = df[col].fillna('Khác').astype(str)
 
-        # 3. Feature Engineering Nâng Cao (y hệt file training)
+        # 3. Feature Engineering Nâng Cao
         df['area_squared'] = df.get('area', 0).fillna(0)**2
         district_name = df.at[0, 'district']
         df['district_price_modifier'] = district_log_price_avg.get(district_name, global_log_price_avg)
@@ -104,8 +152,11 @@ def main():
         # 5. Dự đoán
         pred_log = model.predict(X)
         pred_price = float(np.expm1(pred_log)[0])
+        
+        # Áp dụng hệ số tăng trưởng thị trường
+        final_price = pred_price * MARKET_GROWTH_FACTOR
 
-        print(json.dumps({"success": True, "predicted_price": pred_price}))
+        print(json.dumps({"success": True, "predicted_price": final_price}))
         sys.stdout.flush()
 
     except Exception as e:
