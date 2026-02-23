@@ -14,9 +14,6 @@ router.get("/profile", authenticate, (req, res) => {
     message: "User profile",
     data: {
       id: req.user._id,
-      name: req.user.name,
-      email: req.user.email,
-      phone: req.user.phone,
       role: req.user.role,
     },
   });

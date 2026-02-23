@@ -56,6 +56,7 @@ export const isAdmin = (req, res, next) => {
       message: "Token không được tìm thấy",
     });
   }
+  console.log("User role:", req.user.role); // Debugging line
 
   if (req.user.role !== "ADMIN") {
     return res.status(403).json({

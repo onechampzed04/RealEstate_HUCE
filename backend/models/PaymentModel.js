@@ -6,7 +6,6 @@ const paymentSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
-      index: true,
     },
 
     package: {
@@ -15,26 +14,25 @@ const paymentSchema = new mongoose.Schema(
       required: true,
     },
 
-    amount: {
-      type: Number,
-      required: true,
-    },
-
-    currency: {
-      type: String,
-      default: "VND",
-    },
+    amount: { type: Number, required: true },
 
     paymentMethod: {
       type: String,
-      enum: ["VNPAY", "MOMO", "STRIPE"],
+      enum: ["VNPAY", "MOMO", "BANK_TRANSFER"],
       required: true,
     },
 
-    transactionId: {
+    orderCode: {
       type: String,
+      required: true,
       unique: true,
-      sparse: true,
+    },
+    transactionId: String,
+    paidAt: Date,
+    gatewayResponse: Object,
+    isProcessed: {
+      type: Boolean,
+      default: false,
     },
 
     status: {
@@ -42,19 +40,9 @@ const paymentSchema = new mongoose.Schema(
       enum: ["PENDING", "SUCCESS", "FAILED"],
       default: "PENDING",
     },
-
-    paidAt: {
-      type: Date,
-    },
-
-    metadata: {
-      type: Object, // lưu raw webhook nếu cần
-    },
   },
   { timestamps: true },
 );
-
-paymentSchema.index({ transactionId: 1 });
 
 const Payment = mongoose.model("Payment", paymentSchema);
 export default Payment;
