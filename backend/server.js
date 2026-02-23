@@ -1,8 +1,7 @@
-
-import dotenv from 'dotenv';
+import dotenv from "dotenv";
 dotenv.config();
 
-console.log('[SERVER] Environment loaded. DEV_MODE:', process.env.DEV_MODE);
+console.log("[SERVER] Environment loaded. DEV_MODE:", process.env.DEV_MODE);
 
 import express from "express";
 import cors from "cors";
@@ -21,7 +20,7 @@ app.use(express.json());
 
 app.use("/api/listings", listingRoutes);
 
-app.use("/api/users", authRoutes);
+app.use("/api/auth", authRoutes);
 
 app.use("/api/upload", uploadRoutes);
 
@@ -34,4 +33,4 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5001;
 
-app.listen(PORT, console.log(`Server running on port ${PORT}`)); 
+app.listen(PORT, console.log(`Server running on port ${PORT}`));
