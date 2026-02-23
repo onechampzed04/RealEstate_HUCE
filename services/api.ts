@@ -1,7 +1,7 @@
 
 import type { Property } from '../types';
 
-const BASE_URL = '/api';
+const BASE_URL = 'http://localhost:5001/api';
 
 async function handleResponse(response: Response) {
     const data = await response.json();
