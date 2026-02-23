@@ -2,21 +2,23 @@ const pendingRegistrations = new Map();
 const pendingPasswordChanges = new Map();
 const pendingNameChanges = new Map();
 const pendingEmailChanges = new Map();
+const pendingPhoneChanges = new Map();
 
 // pendingRegistrations: email -> { name, email, password, otp, expiresAt }
 // pendingPasswordChanges: userId -> { userId, newPassword, otp, expiresAt }
 // pendingNameChanges: userId -> { userId, newName, otp, expiresAt }
 // pendingEmailChanges: userId -> { userId, newEmail, otp, expiresAt }
+// pendingPhoneChanges: userId -> { userId, newPhone, otp, expiresAt }
 
 function generateOtp() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
 // Registration OTP functions
-function createPendingRegistration(name, email, password, ttlMs = 1000 * 60 * 10) {
+function createPendingRegistration(name, email, password, phone = '', ttlMs = 1000 * 60 * 10) {
   const otp = generateOtp();
   const expiresAt = Date.now() + ttlMs;
-  pendingRegistrations.set(email, { name, email, password, otp, expiresAt });
+  pendingRegistrations.set(email, { name, email, password, phone, otp, expiresAt });
   return otp;
 }
 
@@ -100,6 +102,28 @@ function removePendingEmailChange(userId) {
   pendingEmailChanges.delete(userId);
 }
 
+// Phone change OTP functions
+function createPendingPhoneChange(userId, newPhone, ttlMs = 1000 * 60 * 10) {
+  const otp = generateOtp();
+  const expiresAt = Date.now() + ttlMs;
+  pendingPhoneChanges.set(userId, { userId, newPhone, otp, expiresAt });
+  return otp;
+}
+
+function getPendingPhoneChange(userId) {
+  const record = pendingPhoneChanges.get(userId);
+  if (!record) return null;
+  if (Date.now() > record.expiresAt) {
+    pendingPhoneChanges.delete(userId);
+    return null;
+  }
+  return record;
+}
+
+function removePendingPhoneChange(userId) {
+  pendingPhoneChanges.delete(userId);
+}
+
 // Legacy functions for backward compatibility
 function createPending(name, email, password, ttlMs = 1000 * 60 * 10) {
   return createPendingRegistration(name, email, password, ttlMs);
@@ -128,6 +152,9 @@ setInterval(() => {
   for (const [userId, rec] of pendingEmailChanges.entries()) {
     if (rec.expiresAt <= now) pendingEmailChanges.delete(userId);
   }
+  for (const [userId, rec] of pendingPhoneChanges.entries()) {
+    if (rec.expiresAt <= now) pendingPhoneChanges.delete(userId);
+  }
 }, 1000 * 60);
 
 export default { 
@@ -145,5 +172,8 @@ export default {
   removePendingNameChange,
   createPendingEmailChange,
   getPendingEmailChange,
-  removePendingEmailChange
+  removePendingEmailChange,
+  createPendingPhoneChange,
+  getPendingPhoneChange,
+  removePendingPhoneChange
 };

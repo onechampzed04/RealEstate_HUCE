@@ -3,7 +3,7 @@ import AuthService from "../service/auth.service.js";
 
 export const register = asyncHandler(async (req, res) => {
   const { name, email, phone, password } = req.body;
-  const result = await AuthService.register({ name, email, phone, password });
+  const result = await AuthService.register({ name, email, phone: phone || '', password });
   res.status(201).json({
     success: true,
     message: "Đăng ký thành công. Vui lòng kiểm tra email để xác thực OTP.",
@@ -93,6 +93,28 @@ export const verifyEmailChangeOtp = asyncHandler(async (req, res) => {
   res.json({
     success: true,
     message: "Email đã được thay đổi thành công",
+    data: result,
+  });
+});
+
+export const requestPhoneChange = asyncHandler(async (req, res) => {
+  const { newPhone } = req.body;
+  const userId = req.userId;
+  const result = await AuthService.requestPhoneChange({ userId, newPhone });
+  res.json({
+    success: true,
+    message: "Mã OTP đã được gửi đến email của bạn",
+    data: result,
+  });
+});
+
+export const verifyPhoneChangeOtp = asyncHandler(async (req, res) => {
+  const { otp } = req.body;
+  const userId = req.userId;
+  const result = await AuthService.verifyPhoneChangeOtp({ userId, otp });
+  res.json({
+    success: true,
+    message: "Số điện thoại đã được thay đổi thành công",
     data: result,
   });
 });

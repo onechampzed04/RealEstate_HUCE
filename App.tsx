@@ -1,5 +1,4 @@
 
-import React from 'react';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import Layout from './components/Layout';
@@ -13,9 +12,6 @@ import ProfilePage from './pages/ProfilePage';
 import SubmitPropertyPage from './pages/SubmitPropertyPage';
 import NotFoundPage from './pages/NotFoundPage';
 import PrivateRoute from './components/PrivateRoute';
-import EditNamePage from './pages/EditNamePage';
-import ChangeEmailPage from './pages/ChangeEmailPage';
-import ChangePasswordPage from './pages/ChangePasswordPage';
 
 function App() {
   return (
@@ -33,21 +29,6 @@ function App() {
             <Route path="/profile" element={
               <PrivateRoute>
                 <ProfilePage />
-              </PrivateRoute>
-            } />
-            <Route path="/profile/edit-name" element={
-              <PrivateRoute>
-                <EditNamePage /> 
-              </PrivateRoute>
-            } />
-            <Route path="/profile/change-email" element={
-              <PrivateRoute>
-                <ChangeEmailPage /> 
-              </PrivateRoute>
-            } />
-            <Route path="/profile/password-change" element={
-              <PrivateRoute>
-                <ChangePasswordPage /> 
               </PrivateRoute>
             } />
             <Route path="/submit-property" element={

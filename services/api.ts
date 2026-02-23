@@ -178,3 +178,27 @@ export const verifyEmailChangeOtp = async (otp: string, token: string) => {
     });
     return handleResponse(response);
 };
+
+export const requestPhoneChange = async (newPhone: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/request-phone-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ newPhone }),
+    });
+    return handleResponse(response);
+};
+
+export const verifyPhoneChangeOtp = async (otp: string, token: string) => {
+    const response = await fetch(`${BASE_URL}/users/verify-phone-change`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ otp }),
+    });
+    return handleResponse(response);
+};

@@ -9,7 +9,9 @@ import {
   requestNameChange,
   verifyNameChangeOtp,
   requestEmailChange,
-  verifyEmailChangeOtp
+  verifyEmailChangeOtp,
+  requestPhoneChange,
+  verifyPhoneChangeOtp
 } from "../controllers/auth.controller.js";
 import { validate } from "../middleware/validateMiddlware.js";
 import { registerSchema, loginSchema } from "../validator/auth.validator.js";
@@ -32,6 +34,10 @@ router.post("/verify-name-change", authenticate, verifyNameChangeOtp);
 // Protected endpoints - Email change
 router.post("/request-email-change", authenticate, requestEmailChange);
 router.post("/verify-email-change", authenticate, verifyEmailChangeOtp);
+
+// Protected endpoints - Phone change
+router.post("/request-phone-change", authenticate, requestPhoneChange);
+router.post("/verify-phone-change", authenticate, verifyPhoneChangeOtp);
 
 // Protected endpoints - User profile
 router.get("/profile", authenticate, (req, res) => {

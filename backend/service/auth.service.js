@@ -12,8 +12,14 @@ class AuthService {
     const existingEmail = await User.findOne({ email: lowerEmail });
     if (existingEmail) throw new Error("Email đã được sử dụng");
 
+    // Kiểm tra số điện thoại đã tồn tại (nếu được cung cấp)
+    if (phone) {
+      const existingPhone = await User.findOne({ phone });
+      if (existingPhone) throw new Error("Số điện thoại này đã được sử dụng");
+    }
+
     // Tạo pending registration và gửi OTP
-    const otp = otpStore.createPendingRegistration(name, lowerEmail, password);
+    const otp = otpStore.createPendingRegistration(name, lowerEmail, password, phone || '');
     
     try {
       await emailService.sendOtpEmail(lowerEmail, otp);
@@ -49,11 +55,21 @@ class AuthService {
       throw new Error("Email đã được sử dụng");
     }
 
+    // Kiểm tra lại số điện thoại không bị sử dụng (nếu được cung cấp)
+    if (pending.phone) {
+      const existingPhone = await User.findOne({ phone: pending.phone });
+      if (existingPhone) {
+        otpStore.removePendingRegistration(lowerEmail);
+        throw new Error("Số điện thoại này đã được sử dụng");
+      }
+    }
+
     // Tạo user mới
     const user = await User.create({
       name: pending.name,
       email: lowerEmail,
       password: pending.password,
+      phone: pending.phone || '',
     });
 
     // Xóa pending registration
@@ -257,6 +273,73 @@ class AuthService {
         role: user.role,
       },
       message: "Email đã được thay đổi thành công" 
+    };
+  }
+
+  async requestPhoneChange({ userId, newPhone }) {
+    const user = await User.findById(userId);
+    if (!user) throw new Error("User không tồn tại");
+
+    // Kiểm tra số điện thoại mới không được bằng số hiện tại
+    if (newPhone === user.phone) {
+      throw new Error("Số điện thoại mới phải khác số hiện tại");
+    }
+
+    // Kiểm tra số điện thoại mới không được sử dụng
+    const existingPhone = await User.findOne({ phone: newPhone });
+    if (existingPhone && existingPhone._id.toString() !== userId) {
+      throw new Error("Số điện thoại này đã được sử dụng bởi người dùng khác");
+    }
+
+    // Tạo pending phone change
+    const otp = otpStore.createPendingPhoneChange(userId, newPhone);
+
+    try {
+      await emailService.sendOtpEmail(user.email, otp);
+    } catch (err) {
+      otpStore.removePendingPhoneChange(userId);
+      throw new Error("Gửi email OTP thất bại. Vui lòng thử lại.");
+    }
+
+    return { 
+      message: "OTP đã được gửi đến email của bạn",
+      email: user.email 
+    };
+  }
+
+  async verifyPhoneChangeOtp({ userId, otp }) {
+    const pending = otpStore.getPendingPhoneChange(userId);
+    if (!pending) {
+      throw new Error("Không tìm thấy yêu cầu thay đổi số điện thoại hoặc OTP đã hết hạn");
+    }
+
+    if (pending.otp !== otp) {
+      throw new Error("Mã OTP không chính xác");
+    }
+
+    // Kiểm tra lại số điện thoại không bị sử dụng
+    const existingPhone = await User.findOne({ phone: pending.newPhone });
+    if (existingPhone && existingPhone._id.toString() !== userId) {
+      otpStore.removePendingPhoneChange(userId);
+      throw new Error("Số điện thoại này đã được sử dụng bởi người dùng khác");
+    }
+
+    // Cập nhật số điện thoại
+    const user = await User.findById(userId);
+    user.phone = pending.newPhone;
+    await user.save();
+
+    otpStore.removePendingPhoneChange(userId);
+
+    return { 
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+      },
+      message: "Số điện thoại đã được thay đổi thành công" 
     };
   }
 }

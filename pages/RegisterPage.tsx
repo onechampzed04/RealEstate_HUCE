@@ -20,6 +20,50 @@ const RegisterPage: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate form data
+    if (!name.trim()) {
+      setError('Vui lòng nhập tên');
+      return;
+    }
+
+    if (name.trim().length < 2) {
+      setError('Tên phải có ít nhất 2 ký tự');
+      return;
+    }
+
+    if (!phone.trim()) {
+      setError('Vui lòng nhập số điện thoại');
+      return;
+    }
+
+    const phoneRegex = /^(\d{9,15})$/;
+    if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
+      setError('Số điện thoại không hợp lệ (9-15 chữ số)');
+      return;
+    }
+
+    if (!email.trim()) {
+      setError('Vui lòng nhập email');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Email không hợp lệ');
+      return;
+    }
+
+    if (!password) {
+      setError('Vui lòng nhập mật khẩu');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
     setLoading(true);
     try {
       console.log('[Register] Submitting registration form...');
