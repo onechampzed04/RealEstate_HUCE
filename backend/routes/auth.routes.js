@@ -41,11 +41,12 @@ router.post("/verify-phone-change", authenticate, verifyPhoneChangeOtp);
 
 // Protected endpoints - User profile
 router.get("/profile", authenticate, (req, res) => {
-  res.json({
+  res.status(200).json({
     success: true,
-    message: "User profile",
     data: {
-      id: req.user._id,
+      _id: req.user._id,
+      name: req.user.name,
+      email: req.user.email,
       role: req.user.role,
     },
   });

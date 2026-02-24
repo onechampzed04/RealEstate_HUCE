@@ -23,7 +23,9 @@ export const verifyRegistrationOtp = asyncHandler(async (req, res) => {
 
 export const login = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
+  console.log("Login request received with email:", email); // ✅ Debug log
   const result = await AuthService.login({ email, password });
+  console.log("Login result:", result); // ✅ Debug log
   res.json({
     success: true,
     message: "Đăng nhập thành công",

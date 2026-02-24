@@ -62,7 +62,6 @@ const seed = async () => {
       password: "123456",
       role: "ADMIN",
     });
-
     // =========================
     // 3️⃣ CREATE LISTINGS
     // =========================
