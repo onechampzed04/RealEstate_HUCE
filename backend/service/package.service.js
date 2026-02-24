@@ -7,6 +7,11 @@ export default class PackageService {
     clearCacheKey("packages");
   }
 
+  async getAllActivePackages() {
+    const packages = await Package.find({ isActive: true }).sort({ priority: -1, price: 1 });
+    return packages;
+  }
+
   async createPackage(data) {
     console.log("Creating package with data:", data);
     const {

@@ -10,7 +10,7 @@ import {
 } from "../validator/package.validator.js";
 const router = express.Router();
 const controller = new PackageController();
-
+router.get("/", controller.getAll);
 router.post(
   "/",
   authenticate,

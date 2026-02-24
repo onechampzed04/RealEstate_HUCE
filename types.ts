@@ -26,4 +26,20 @@ export interface User {
   _id: string;
   name: string;
   email: string;
+  phone?: string;
+}
+
+export interface Package {
+  _id: string;
+  name: string;
+  type: 'FREE' | 'BASIC' | 'PRO' | 'VIP';
+  description: string;
+  maxPostsPerDay: number;
+  maxTotalPosts: number; // k dung
+  price: number;
+  durationDays: number;
+  allowHotPost: boolean;
+  autoApprove: boolean;
+  priority: number;
+  isActive: boolean;
 }

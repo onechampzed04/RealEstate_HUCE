@@ -6,7 +6,7 @@ const packageSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["FREE", "BASIC", "PRO", "VIP"],
+      enum: ["BASIC", "PREMIUM"],
       required: true,
     },
 
@@ -14,7 +14,7 @@ const packageSchema = new mongoose.Schema(
 
     maxPostsPerDay: { type: Number, default: 1, min: 0 },
 
-    maxTotalPosts: { type: Number, default: 1, min: 0 },
+    // maxTotalPosts: { type: Number, default: 1, min: 0 },
 
     price: { type: Number, required: true, min: 0 },
 

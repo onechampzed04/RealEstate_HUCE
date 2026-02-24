@@ -6,7 +6,16 @@ export default class PackageController {
   constructor() {
     this.packageService = new PackageService();
   }
+  getAll = asyncHandler(async (req, res) => {
+    const packages = await this.packageService.getAllActivePackages();
 
+    res.json({
+      success: true,
+      message: "Lấy danh sách các gói đang hoạt động thành công.",
+      data: packages,
+    });
+  });
+  
   create = asyncHandler(async (req, res) => {
     console.log("Received request to create package with body:", req.body);
     const pkg = await this.packageService.createPackage(req.body);

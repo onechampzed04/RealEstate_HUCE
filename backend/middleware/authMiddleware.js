@@ -3,21 +3,22 @@ import dotenv from "dotenv";
 dotenv.config();
 import asyncHandler from "express-async-handler";
 import User from "../models/UserModel.js";
+import { JWT_CONFIG } from "../config/jwt.js";
 
 export const authenticate = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader || !authHeader.startsWith("Bearer")) {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return res
       .status(401)
-      .json({ success: false, message: "Not authorized, no token" });
+      .json({ success: false, message: "Không được phép, không có token" });
   }
 
   const token = authHeader.split(" ")[1];
 
   try {
     // 2️⃣ Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, JWT_CONFIG.ACCESS_TOKEN_SECRET);
     console.log("Decoded token:", decoded); // Debugging line
     // 3️⃣ Tìm user từ decoded data
     const user = await User.findById(decoded.id);
@@ -29,9 +30,17 @@ export const authenticate = asyncHandler(async (req, res, next) => {
       });
     }
 
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        message: "Tài khoản của bạn đã bị vô hiệu hóa",
+      });
+    }
+
     // 4️⃣ Attach user info vào request
     req.user = user;
-    req.userId = decoded.userId;
+    req.userId = decoded.id;
+    req.userRole = decoded.role;
 
     next();
   } catch (error) {
@@ -49,24 +58,30 @@ export const authenticate = asyncHandler(async (req, res, next) => {
   }
 });
 
-export const isAdmin = (req, res, next) => {
-  if (!req.user) {
-    return res.status(401).json({
-      success: false,
-      message: "Token không được tìm thấy",
-    });
-  }
-  console.log("User role:", req.user.role); // Debugging line
+/**
+ * Middleware để kiểm tra quyền Admin
+ */
+export const authorize = (allowedRoles = []) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({
+        success: false,
+        message: "Token không được tìm thấy",
+      });
+    }
 
-  if (req.user.role !== "ADMIN") {
-    return res.status(403).json({
-      success: false,
-      message: "Yêu cầu quyền Admin",
-    });
-  }
+    if (allowedRoles.length > 0 && !allowedRoles.includes(req.userRole)) {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền truy cập tài nguyên này",
+      });
+    }
 
-  next();
+    next();
+  };
 };
+
+export const isAdmin = authorize(["ADMIN"]);
 
 export const optionalAuth = asyncHandler(async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -79,12 +94,13 @@ export const optionalAuth = asyncHandler(async (req, res, next) => {
   const token = authHeader.split(" ")[1];
 
   try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.userId);
+    const decoded = jwt.verify(token, JWT_CONFIG.ACCESS_TOKEN_SECRET);
+    const user = await User.findById(decoded.id);
 
     if (user) {
       req.user = user;
-      req.userId = decoded.userId;
+      req.userId = decoded.id;
+      req.userRole = decoded.role;
     }
   } catch (error) {
     // Token invalid, but continue anyway (treat as anonymous)
