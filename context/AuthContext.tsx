@@ -32,7 +32,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (storedUserInfo) {
         const userInfo: UserInfo = JSON.parse(storedUserInfo);
         // FIX: The user object was missing the `_id` property, which is required by the `User` type.
-        setUser({id: userInfo._id, _id: userInfo._id, name: userInfo.name, email: userInfo.email, phone: userInfo.phone});
+        setUser({
+          id: userInfo._id, 
+          _id: userInfo._id, 
+          name: userInfo.name, 
+          email: userInfo.email, 
+          phone: userInfo.phone, 
+          avatar: userInfo.avatar,
+          role: userInfo.role,
+        });
         setToken(userInfo.token);
       }
     } catch (error) {
@@ -50,11 +58,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       name: result.user.name,
       email: result.user.email,
       phone: result.user.phone,
+      avatar: result.user.avatar,
       token: result.accessToken,
       role: result.user.role,
     };
     localStorage.setItem('userInfo', JSON.stringify(userInfo));
-    setUser({id: result.user._id, _id: result.user._id, name: result.user.name, email: result.user.email, phone: result.user.phone});
+    setUser({
+      id: result.user._id, 
+      _id: result.user._id, 
+      name: result.user.name, 
+      email: result.user.email, 
+      phone: result.user.phone, 
+      avatar: result.user.avatar,
+      role: result.user.role,
+    });
     setToken(result.accessToken);
   };
 
@@ -70,11 +87,20 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       name: userInfo.user.name,
       email: userInfo.user.email,
       phone: userInfo.user.phone,
+      avatar: userInfo.user.avatar,
       token: userInfo.accessToken,
       role: userInfo.user.role,
     };
     localStorage.setItem('userInfo', JSON.stringify(fullUserInfo));
-    setUser({id: userInfo.user._id, _id: userInfo.user._id, name: userInfo.user.name, email: userInfo.user.email, phone: userInfo.user.phone});
+    setUser({
+      id: userInfo.user._id, 
+      _id: userInfo.user._id, 
+      name: userInfo.user.name, 
+      email: userInfo.user.email, 
+      phone: userInfo.user.phone, 
+      avatar: userInfo.user.avatar,
+      role: userInfo.user.role,
+    });
     setToken(userInfo.accessToken);
   };
 
@@ -85,13 +111,22 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   };
 
   const updateUser = (userData: User) => {
-    setUser({id: userData._id, _id: userData._id, name: userData.name, email: userData.email, phone: userData.phone});
+    setUser({
+      id: userData._id, 
+      _id: userData._id, 
+      name: userData.name, 
+      email: userData.email, 
+      phone: userData.phone,
+      avatar: userData.avatar,
+      role: userData.role,
+    });
     const storedUserInfo = localStorage.getItem('userInfo');
     if (storedUserInfo) {
       const userInfo = JSON.parse(storedUserInfo);
       userInfo.name = userData.name;
       userInfo.email = userData.email;
       userInfo.phone = userData.phone;
+      userInfo.avatar = userData.avatar;
       localStorage.setItem('userInfo', JSON.stringify(userInfo));
     }
   };

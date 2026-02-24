@@ -3,6 +3,7 @@ import React from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import useAuth from '../hooks/useAuth';
 import Button from './Button';
+import AvatarPlaceholder from './AvatarPlaceholder';
 
 const Header: React.FC = () => {
   const { user, logout } = useAuth();
@@ -34,7 +35,14 @@ const Header: React.FC = () => {
             <div className="ml-4 flex items-center md:ml-6">
               {user ? (
                 <div className="flex items-center space-x-4">
-                  <span className="text-gray-700">Chào, {user.name}</span>
+                  <div className="flex items-center gap-2">
+                    <AvatarPlaceholder
+                      name={user.name}
+                      avatarUrl={user.avatar?.url || undefined}
+                      size="sm"
+                    />
+                    <span className="text-gray-700">Chào, {user.name}</span>
+                  </div>
                   <Link to="/profile">
                     <Button variant="secondary" size="sm">Hồ Sơ</Button>
                   </Link>

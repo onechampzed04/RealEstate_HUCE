@@ -131,7 +131,7 @@ const ChangePhoneModal: React.FC<ChangePhoneModalProps> = ({ isOpen, onClose, on
                 ) : (
                     <form onSubmit={handleVerifyPhoneChange}>
                         <div className="mb-4">
-                            <p className="text-gray-600 mb-3">Mã OTP đã được gửi. Vui lòng kiểm tra email của bạn.</p>
+                            <p className="text-gray-600 mb-3">Mã OTP đã được gửi đến email hiện tại.<br></br>Vui lòng kiểm tra email của bạn.</p>
                             <label className="block text-gray-700 text-sm font-bold mb-2">
                                 Mã OTP
                             </label>

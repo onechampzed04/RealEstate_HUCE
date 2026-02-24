@@ -202,3 +202,17 @@ export const verifyPhoneChangeOtp = async (otp: string, token: string) => {
     });
     return handleResponse(response);
 };
+
+export const uploadAvatar = async (file: File, token: string) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const response = await fetch(`${BASE_URL}/users/upload-avatar`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+    });
+    return handleResponse(response);
+};

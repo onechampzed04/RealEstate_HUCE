@@ -85,6 +85,10 @@ class AuthService {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        avatar: {
+          url: user.avatarUrl || null,
+          publicId: user.avatarPublicId || null,
+        }
       },
       accessToken 
     };
@@ -110,6 +114,10 @@ class AuthService {
         email: user.email,
         phone: user.phone,
         role: user.role,
+        avatar: {
+          url: user.avatarUrl || null,
+          publicId: user.avatarPublicId || null,
+        }
       },
       accessToken 
     };

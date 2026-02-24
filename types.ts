@@ -27,4 +27,10 @@ export interface User {
   name: string;
   email: string;
   phone?: string;
+  avatar?: {
+    url: string | null;
+    publicId: string | null;
+  };
+  avatarUrl?: string; // Legacy field for backward compatibility
+  role?: string;
 }
