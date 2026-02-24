@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 // ===============================================================
 // API SERVICE: Giao tiếp với Backend Node.js
 // ===============================================================
-const API_URL = 'http://localhost:5001/api/listings/valuation'; // Đảm bảo cổng là 5001
+const API_URL = 'http://localhost:5001/api/listings/valuation'; // Đã sửa thành /listings/
 
 async function getValuation(data: any): Promise<{ valuation: number }> {
   console.log("Dữ liệu gửi đến backend:", JSON.stringify(data, null, 2));
@@ -20,7 +20,7 @@ async function getValuation(data: any): Promise<{ valuation: number }> {
 }
 
 // ===============================================================
-// DỮ LIỆU CẤU HÌNH CHO FORM (THEO QUY HOẠCH MỚI 2025 - ĐẦY ĐỦ)
+// DỮ LIỆU CẤU HÌNH CHO FORM (THEO QUY HOẠCH MỚI 2025 - ĐẦY ĐỦ NHẤT)
 // ===============================================================
 const CITIES = [
     { value: 'Thành phố Hà Nội', label: 'Thành phố Hà Nội' },
@@ -57,6 +57,7 @@ const CITIES = [
 ];
 
 const DISTRICTS_BY_CITY: Record<string, { value: string; label: string }[]> = {
+  // --- CÁC TỈNH/THÀNH KHÔNG SÁP NHẬP ---
   'Thành phố Hà Nội': [
     { value: 'Quận Ba Đình', label: 'Quận Ba Đình' }, { value: 'Quận Hoàn Kiếm', label: 'Quận Hoàn Kiếm' },
     { value: 'Quận Hai Bà Trưng', label: 'Quận Hai Bà Trưng' }, { value: 'Quận Đống Đa', label: 'Quận Đống Đa' },
@@ -76,6 +77,8 @@ const DISTRICTS_BY_CITY: Record<string, { value: string; label: string }[]> = {
   'Tỉnh Thanh Hóa': [ { value: 'TP. Thanh Hóa', label: 'TP. Thanh Hóa' }, { value: 'TP. Sầm Sơn', label: 'TP. Sầm Sơn' }, { value: 'TX. Bỉm Sơn', label: 'TX. Bỉm Sơn' } ],
   'Tỉnh Nghệ An': [ { value: 'TP. Vinh', label: 'TP. Vinh' }, { value: 'TX. Thái Hòa', label: 'TX. Thái Hòa' }, { value: 'TX. Hoàng Mai', label: 'TX. Hoàng Mai' } ],
   'Tỉnh Hà Tĩnh': [ { value: 'TP. Hà Tĩnh', label: 'TP. Hà Tĩnh' }, { value: 'TX. Hồng Lĩnh', label: 'TX. Hồng Lĩnh' }, { value: 'TX. Kỳ Anh', label: 'TX. Kỳ Anh' } ],
+  
+  // --- CÁC TỈNH/THÀNH MỚI DO SÁP NHẬP ---
   'Tỉnh Tuyên Quang': [ { value: 'TP. Tuyên Quang', label: 'TP. Tuyên Quang' }, { value: 'TP. Hà Giang', label: 'TP. Hà Giang (từ Hà Giang)' } ],
   'Tỉnh Lào Cai': [ { value: 'TP. Lào Cai', label: 'TP. Lào Cai' }, { value: 'TP. Yên Bái', label: 'TP. Yên Bái (từ Yên Bái)' } ],
   'Tỉnh Thái Nguyên': [ { value: 'TP. Thái Nguyên', label: 'TP. Thái Nguyên' }, { value: 'TP. Sông Công', label: 'TP. Sông Công' }, { value: 'TP. Phổ Yên', label: 'TP. Phổ Yên' }, { value: 'TP. Bắc Kạn', label: 'TP. Bắc Kạn (từ Bắc Kạn)' } ],
@@ -91,7 +94,20 @@ const DISTRICTS_BY_CITY: Record<string, { value: string; label: string }[]> = {
   'Tỉnh Khánh Hòa': [ { value: 'TP. Nha Trang', label: 'TP. Nha Trang' }, { value: 'TP. Cam Ranh', label: 'TP. Cam Ranh' }, { value: 'TP. Phan Rang - Tháp Chàm', label: 'TP. Phan Rang - Tháp Chàm (từ Ninh Thuận)' } ],
   'Tỉnh Lâm Đồng': [ { value: 'TP. Đà Lạt', label: 'TP. Đà Lạt' }, { value: 'TP. Bảo Lộc', label: 'TP. Bảo Lộc' }, { value: 'TP. Gia Nghĩa', label: 'TP. Gia Nghĩa (từ Đắk Nông)' }, { value: 'TP. Phan Thiết', label: 'TP. Phan Thiết (từ Bình Thuận)' } ],
   'Tỉnh Đắk Lắk': [ { value: 'TP. Buôn Ma Thuột', label: 'TP. Buôn Ma Thuột' }, { value: 'TP. Tuy Hòa', label: 'TP. Tuy Hòa (từ Phú Yên)' } ],
-  'Thành phố Hồ Chí Minh': [ { value: 'TP. Thủ Đức', label: 'TP. Thủ Đức' }, { value: 'TP. Thủ Dầu Một', label: 'TP. Thủ Dầu Một (từ Bình Dương)' }, { value: 'TP. Thuận An', label: 'TP. Thuận An (từ Bình Dương)' }, { value: 'TP. Dĩ An', label: 'TP. Dĩ An (từ Bình Dương)' }, { value: 'TP. Tân Uyên', label: 'TP. Tân Uyên (từ Bình Dương)' }, { value: 'TP. Vũng Tàu', label: 'TP. Vũng Tàu (từ BR-VT)' }, { value: 'TP. Bà Rịa', label: 'TP. Bà Rịa (từ BR-VT)' } ],
+  'Thành phố Hồ Chí Minh': [
+    // 16 Quận nội thành
+    { value: 'Quận 1', label: 'Quận 1' }, { value: 'Quận 3', label: 'Quận 3' }, { value: 'Quận 4', label: 'Quận 4' },
+    { value: 'Quận 5', label: 'Quận 5' }, { value: 'Quận 6', label: 'Quận 6' }, { value: 'Quận 7', label: 'Quận 7' },
+    { value: 'Quận 8', label: 'Quận 8' }, { value: 'Quận 10', label: 'Quận 10' }, { value: 'Quận 11', label: 'Quận 11' },
+    { value: 'Quận 12', label: 'Quận 12' }, { value: 'Quận Phú Nhuận', label: 'Quận Phú Nhuận' }, { value: 'Quận Bình Thạnh', label: 'Quận Bình Thạnh' },
+    { value: 'Quận Gò Vấp', label: 'Quận Gò Vấp' }, { value: 'Quận Tân Bình', label: 'Quận Tân Bình' }, { value: 'Quận Bình Tân', label: 'Quận Bình Tân' },
+    { value: 'Quận Tân Phú', label: 'Quận Tân Phú' },
+    // Các thành phố thành viên
+    { value: 'TP. Thủ Đức', label: 'TP. Thủ Đức' }, { value: 'TP. Thủ Dầu Một', label: 'TP. Thủ Dầu Một (từ Bình Dương)' },
+    { value: 'TP. Thuận An', label: 'TP. Thuận An (từ Bình Dương)' }, { value: 'TP. Dĩ An', label: 'TP. Dĩ An (từ Bình Dương)' },
+    { value: 'TP. Tân Uyên', label: 'TP. Tân Uyên (từ Bình Dương)' }, { value: 'TP. Vũng Tàu', label: 'TP. Vũng Tàu (từ BR-VT)' },
+    { value: 'TP. Bà Rịa', label: 'TP. Bà Rịa (từ BR-VT)' },
+  ],
   'Tỉnh Đồng Nai': [ { value: 'TP. Biên Hòa', label: 'TP. Biên Hòa' }, { value: 'TP. Long Khánh', label: 'TP. Long Khánh' }, { value: 'TP. Đồng Xoài', label: 'TP. Đồng Xoài (từ Bình Phước)' } ],
   'Tỉnh Tây Ninh': [ { value: 'TP. Tây Ninh', label: 'TP. Tây Ninh' }, { value: 'TP. Tân An', label: 'TP. Tân An (từ Long An)' } ],
   'Thành phố Cần Thơ': [ { value: 'Quận Ninh Kiều', label: 'Quận Ninh Kiều' }, { value: 'TP. Sóc Trăng', label: 'TP. Sóc Trăng (từ Sóc Trăng)' }, { value: 'TP. Vị Thanh', label: 'TP. Vị Thanh (từ Hậu Giang)' }, { value: 'TP. Ngã Bảy', label: 'TP. Ngã Bảy (từ Hậu Giang)' } ],
