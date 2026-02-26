@@ -23,7 +23,7 @@ export const fetchProperties = async (
   if (type) params.append("type", type);
   if (price) params.append("price", price);
 
-  const response = await fetch(`${BASE_URL}/properties?${params.toString()}`);
+  const response = await fetch(`${BASE_URL}/listings?${params.toString()}`);
   return handleResponse(response);
 };
 
