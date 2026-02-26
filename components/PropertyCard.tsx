@@ -23,10 +23,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             <h3 className="font-bold text-xl text-gray-900 mb-2 truncate">{property.title}</h3>
             <span className="text-xl font-bold text-primary">{new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(property.price)}</span>
           </div>
-          <div className="flex items-center text-gray-600 mb-4">
+          <div className="flex items-center text-gray-600 mb-2">
             <MapPinIcon className="h-5 w-5 mr-2 text-gray-400" />
-            <span className="truncate">{property.address}, {property.city}</span>
+            <span className="truncate">
+              {property.address}, {property.city}
+            </span>
           </div>
+
+          {property.distance !== undefined && (
+            <div className="text-sm text-green-600 font-medium mb-2">
+              📍 Cách bạn {(property.distance / 1000).toFixed(2)} km
+            </div>
+          )}
           <div className="flex justify-around items-center text-gray-700 border-t pt-4">
             <div className="flex items-center space-x-2">
               <BedIcon className="h-5 w-5 text-primary"/>

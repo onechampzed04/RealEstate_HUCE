@@ -12,6 +12,7 @@ export interface Property {
   description: string;
   type: 'House' | 'Apartment' | 'Villa' | 'Land';
   status: 'For Sale' | 'For Rent';
+  distance?: number;
   imageUrl: string;
   gallery: string[];
   agent: {
@@ -26,4 +27,11 @@ export interface User {
   _id: string;
   name: string;
   email: string;
+  phone?: string;
+  avatar?: {
+    url: string | null;
+    publicId: string | null;
+  };
+  avatarUrl?: string; // Legacy field for backward compatibility
+  role?: string;
 }

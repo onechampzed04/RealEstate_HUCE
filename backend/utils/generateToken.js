@@ -1,10 +1,19 @@
 
 import jwt from 'jsonwebtoken';
+import { JWT_CONFIG } from '../config/jwt.js';
 
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'aVerySecretKey', {
-    expiresIn: '30d',
-  });
+const generateToken = (userId, role = 'USER') => {
+  return jwt.sign(
+    { 
+      id: userId, 
+      userId: userId,
+      role: role 
+    }, 
+    JWT_CONFIG.ACCESS_TOKEN_SECRET, 
+    {
+      expiresIn: JWT_CONFIG.ACCESS_TOKEN_EXPIRY,
+    }
+  );
 };
 
 export default generateToken;

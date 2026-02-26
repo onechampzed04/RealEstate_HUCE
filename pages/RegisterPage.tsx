@@ -6,22 +6,93 @@ import Button from '../components/Button';
 
 const RegisterPage: React.FC = () => {
   const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { register, completeRegister } = useAuth();
   const navigate = useNavigate();
+
+  const [step, setStep] = useState<'form' | 'otp'>('form');
+  const [otp, setOtp] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Validate form data
+    if (!name.trim()) {
+      setError('Vui lòng nhập tên');
+      return;
+    }
+
+    if (name.trim().length < 2) {
+      setError('Tên phải có ít nhất 2 ký tự');
+      return;
+    }
+
+    if (!phone.trim()) {
+      setError('Vui lòng nhập số điện thoại');
+      return;
+    }
+
+    const phoneRegex = /^(\d{9,15})$/;
+    if (!phoneRegex.test(phone.replace(/\D/g, ''))) {
+      setError('Số điện thoại không hợp lệ (9-15 chữ số)');
+      return;
+    }
+
+    if (!email.trim()) {
+      setError('Vui lòng nhập email');
+      return;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Email không hợp lệ');
+      return;
+    }
+
+    if (!password) {
+      setError('Vui lòng nhập mật khẩu');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Mật khẩu phải có ít nhất 6 ký tự');
+      return;
+    }
+
     setLoading(true);
     try {
-      await register(name, email, password);
+      console.log('[Register] Submitting registration form...');
+      await register(name, email, password, phone); // initiates OTP send
+      console.log('[Register] OTP sent successfully, switching to OTP screen');
+      setStep('otp');
+    } catch (err: any) {
+      console.error('[Register] Registration error:', err);
+      const errorMsg = err instanceof Error ? err.message : 'Không thể gửi mã OTP. Vui lòng thử lại.';
+      setError(errorMsg);
+      setLoading(false);
+    }
+  };
+
+  const handleVerify = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+      console.log('[Verify OTP] Verifying OTP for:', email);
+      const { verifyRegistrationOtp } = await import('../services/api');
+      const userInfo = await verifyRegistrationOtp(email, otp);
+      console.log('[Verify OTP] OTP verified, user created:', userInfo);
+      completeRegister(userInfo);
       navigate('/profile');
-    } catch (err) {
-      setError('Không thể tạo tài khoản. Vui lòng thử lại.');
+    } catch (err: any) {
+      console.error('[Verify OTP] Verification error:', err);
+      const errorMsg = err instanceof Error ? err.message : 'Xác thực OTP thất bại. Vui lòng kiểm tra mã.';
+      setError(errorMsg);
       setLoading(false);
     }
   };
@@ -34,61 +105,105 @@ const RegisterPage: React.FC = () => {
             Tạo tài khoản mới
           </h2>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="rounded-md shadow-sm -space-y-px">
-             <div>
-              <label htmlFor="name" className="sr-only">Họ và tên</label>
+        {step === 'form' && (
+          <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+            <div className="rounded-md shadow-sm -space-y-px">
+              <div>
+                <label htmlFor="name" className="sr-only">Họ và tên</label>
+                <input
+                  id="name"
+                  name="name"
+                  type="text"
+                  autoComplete="name"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Họ và tên"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="phone" className="sr-only">Số điện thoại</label>
+                <input
+                  id="phone"
+                  name="phone"
+                  type="text"
+                  autoComplete="tel"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Số điện thoại"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="email-address" className="sr-only">Email</label>
+                <input
+                  id="email-address"
+                  name="email"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Địa chỉ email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
+              <div>
+                <label htmlFor="password"className="sr-only">Mật khẩu</label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="new-password"
+                  required
+                  className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
+                  placeholder="Mật khẩu"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            <div>
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading ? 'Đang gửi mã...' : 'Đăng Ký'}
+              </Button>
+            </div>
+          </form>
+        )}
+
+        {step === 'otp' && (
+          <form className="mt-8 space-y-6" onSubmit={handleVerify}>
+            <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
+              <p className="text-sm text-blue-800">
+                Mã OTP đã được gửi đến email: <strong>{email}</strong>
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">Mã OTP</label>
               <input
-                id="name"
-                name="name"
                 type="text"
-                autoComplete="name"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-primary focus:border-primary"
                 required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-t-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Họ và tên"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                placeholder="Nhập mã OTP từ email"
               />
             </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <div>
-              <label htmlFor="email-address" className="sr-only">Email</label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                autoComplete="email"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Địa chỉ email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <Button type="submit" className="w-full">
+                {'Xác thực OTP'}
+              </Button>
             </div>
-            <div>
-              <label htmlFor="password"className="sr-only">Mật khẩu</label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="new-password"
-                required
-                className="appearance-none rounded-none relative block w-full px-3 py-2 border border-gray-300 placeholder-gray-500 text-gray-900 rounded-b-md focus:outline-none focus:ring-primary focus:border-primary focus:z-10 sm:text-sm"
-                placeholder="Mật khẩu"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-            </div>
-          </div>
+          </form>
+        )}
 
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-
-          <div>
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? 'Đang tạo...' : 'Đăng Ký'}
-            </Button>
-          </div>
-        </form>
-         <p className="mt-2 text-center text-sm text-gray-600">
+        <p className="mt-2 text-center text-sm text-gray-600">
           Đã có tài khoản?{' '}
           <Link to="/login" className="font-medium text-primary hover:text-blue-700">
             Đăng nhập
