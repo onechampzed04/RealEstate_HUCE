@@ -23,7 +23,7 @@ export const fetchProperties = async (
   if (type) params.append("type", type);
   if (price) params.append("price", price);
 
-  const response = await fetch(`${BASE_URL}/properties?${params.toString()}`);
+  const response = await fetch(`${BASE_URL}/listings?${params.toString()}`);
   return handleResponse(response);
 };
 
@@ -199,6 +199,60 @@ export const verifyPhoneChangeOtp = async (otp: string, token: string) => {
             'Authorization': `Bearer ${token}`,
         },
         body: JSON.stringify({ otp }),
+    });
+    return handleResponse(response);
+};
+
+export const uploadAvatar = async (file: File, token: string) => {
+    const formData = new FormData();
+    formData.append('avatar', file);
+
+    const response = await fetch(`${BASE_URL}/users/upload-avatar`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+    });
+    return handleResponse(response);
+};
+
+// api cho gói đăng tin
+export const fetchActivePackages = async (): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/packages`);
+    return handleResponse(response);
+};
+
+export const fetchMyActivePackage = async (token: string): Promise<any | null> => {
+    const response = await fetch(`${BASE_URL}/user-packages/my-active`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    // Gói cước có thể không tồn tại, nên cần xử lý lỗi 404 một cách nhẹ nhàng
+    if (response.status === 404) {
+        return null;
+    }
+    return handleResponse(response);
+};
+// api cho thanh toán
+export const createPaymentLink = async (packageId: string, token: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/payments/create-link`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ packageId }),
+    });
+    return handleResponse(response);
+};
+
+export const checkOrderStatus = async (orderCode: number, token: string): Promise<{ status: string }> => {
+    const response = await fetch(`${BASE_URL}/payments/status/${orderCode}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
     });
     return handleResponse(response);
 };

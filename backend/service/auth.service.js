@@ -7,7 +7,7 @@ import bcrypt from "bcrypt";
 class AuthService {
   async register({ name, email, phone, password }) {
     const lowerEmail = email.toLowerCase();
-    
+
     // Kiểm tra email đã tồn tại
     const existingEmail = await User.findOne({ email: lowerEmail });
     if (existingEmail) throw new Error("Email đã được sử dụng");
@@ -19,8 +19,13 @@ class AuthService {
     }
 
     // Tạo pending registration và gửi OTP
-    const otp = otpStore.createPendingRegistration(name, lowerEmail, password, phone || '');
-    
+    const otp = otpStore.createPendingRegistration(
+      name,
+      lowerEmail,
+      password,
+      phone || "",
+    );
+
     try {
       await emailService.sendOtpEmail(lowerEmail, otp);
     } catch (err) {
@@ -28,15 +33,15 @@ class AuthService {
       throw new Error("Gửi email OTP thất bại. Vui lòng thử lại.");
     }
 
-    return { 
+    return {
       message: "OTP đã được gửi. Vui lòng kiểm tra email của bạn.",
-      email: lowerEmail 
+      email: lowerEmail,
     };
   }
 
   async verifyRegistrationOtp({ email, otp }) {
     const lowerEmail = email.toLowerCase();
-    
+
     // Lấy pending registration
     const pending = otpStore.getPendingRegistration(lowerEmail);
     if (!pending) {
@@ -69,7 +74,7 @@ class AuthService {
       name: pending.name,
       email: lowerEmail,
       password: pending.password,
-      phone: pending.phone || '',
+      phone: pending.phone || "",
     });
 
     // Xóa pending registration
@@ -78,21 +83,25 @@ class AuthService {
     // Tạo access token
     const accessToken = generateToken(user._id, user.role);
 
-    return { 
+    return {
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role,
+        avatar: {
+          url: user.avatarUrl || null,
+          publicId: user.avatarPublicId || null,
+        }
       },
-      accessToken 
+      accessToken,
     };
   }
 
   async login({ email, password }) {
     const lowerEmail = email.toLowerCase();
-    
+
     const user = await User.findOne({ email: lowerEmail }).select("+password");
     if (!user) throw new Error("Email hoặc mật khẩu không hợp lệ");
 
@@ -102,16 +111,20 @@ class AuthService {
     if (!user.isActive) throw new Error("Tài khoản của bạn đã bị vô hiệu hóa");
 
     const accessToken = generateToken(user._id, user.role);
-    
-    return { 
+
+    return {
       user: {
         _id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
         role: user.role,
+        avatar: {
+          url: user.avatarUrl || null,
+          publicId: user.avatarPublicId || null,
+        }
       },
-      accessToken 
+      accessToken,
     };
   }
 
@@ -129,16 +142,18 @@ class AuthService {
       throw new Error("Gửi email OTP thất bại. Vui lòng thử lại.");
     }
 
-    return { 
+    return {
       message: "OTP đã được gửi đến email của bạn",
-      email: user.email 
+      email: user.email,
     };
   }
 
   async verifyPasswordChangeOtp({ userId, otp }) {
     const pending = otpStore.getPendingPasswordChange(userId);
     if (!pending) {
-      throw new Error("Không tìm thấy yêu cầu thay đổi mật khẩu hoặc OTP đã hết hạn");
+      throw new Error(
+        "Không tìm thấy yêu cầu thay đổi mật khẩu hoặc OTP đã hết hạn",
+      );
     }
 
     if (pending.otp !== otp) {
@@ -152,8 +167,8 @@ class AuthService {
 
     otpStore.removePendingPasswordChange(userId);
 
-    return { 
-      message: "Mật khẩu đã được thay đổi thành công" 
+    return {
+      message: "Mật khẩu đã được thay đổi thành công",
     };
   }
 
@@ -177,16 +192,18 @@ class AuthService {
       throw new Error("Gửi email OTP thất bại. Vui lòng thử lại.");
     }
 
-    return { 
+    return {
       message: "OTP đã được gửi đến email của bạn",
-      email: user.email 
+      email: user.email,
     };
   }
 
   async verifyNameChangeOtp({ userId, otp }) {
     const pending = otpStore.getPendingNameChange(userId);
     if (!pending) {
-      throw new Error("Không tìm thấy yêu cầu thay đổi tên hoặc OTP đã hết hạn");
+      throw new Error(
+        "Không tìm thấy yêu cầu thay đổi tên hoặc OTP đã hết hạn",
+      );
     }
 
     if (pending.otp !== otp) {
@@ -200,7 +217,7 @@ class AuthService {
 
     otpStore.removePendingNameChange(userId);
 
-    return { 
+    return {
       user: {
         _id: user._id,
         name: user.name,
@@ -208,7 +225,7 @@ class AuthService {
         phone: user.phone,
         role: user.role,
       },
-      message: "Tên đã được thay đổi thành công" 
+      message: "Tên đã được thay đổi thành công",
     };
   }
 
@@ -234,16 +251,18 @@ class AuthService {
       throw new Error("Gửi email OTP thất bại. Vui lòng thử lại.");
     }
 
-    return { 
+    return {
       message: "OTP đã được gửi đến email mới của bạn",
-      newEmail: lowerNewEmail 
+      newEmail: lowerNewEmail,
     };
   }
 
   async verifyEmailChangeOtp({ userId, otp }) {
     const pending = otpStore.getPendingEmailChange(userId);
     if (!pending) {
-      throw new Error("Không tìm thấy yêu cầu thay đổi email hoặc OTP đã hết hạn");
+      throw new Error(
+        "Không tìm thấy yêu cầu thay đổi email hoặc OTP đã hết hạn",
+      );
     }
 
     if (pending.otp !== otp) {
@@ -264,7 +283,7 @@ class AuthService {
 
     otpStore.removePendingEmailChange(userId);
 
-    return { 
+    return {
       user: {
         _id: user._id,
         name: user.name,
@@ -272,7 +291,7 @@ class AuthService {
         phone: user.phone,
         role: user.role,
       },
-      message: "Email đã được thay đổi thành công" 
+      message: "Email đã được thay đổi thành công",
     };
   }
 
@@ -301,16 +320,18 @@ class AuthService {
       throw new Error("Gửi email OTP thất bại. Vui lòng thử lại.");
     }
 
-    return { 
+    return {
       message: "OTP đã được gửi đến email của bạn",
-      email: user.email 
+      email: user.email,
     };
   }
 
   async verifyPhoneChangeOtp({ userId, otp }) {
     const pending = otpStore.getPendingPhoneChange(userId);
     if (!pending) {
-      throw new Error("Không tìm thấy yêu cầu thay đổi số điện thoại hoặc OTP đã hết hạn");
+      throw new Error(
+        "Không tìm thấy yêu cầu thay đổi số điện thoại hoặc OTP đã hết hạn",
+      );
     }
 
     if (pending.otp !== otp) {
@@ -331,7 +352,7 @@ class AuthService {
 
     otpStore.removePendingPhoneChange(userId);
 
-    return { 
+    return {
       user: {
         _id: user._id,
         name: user.name,
@@ -339,10 +360,9 @@ class AuthService {
         phone: user.phone,
         role: user.role,
       },
-      message: "Số điện thoại đã được thay đổi thành công" 
+      message: "Số điện thoại đã được thay đổi thành công",
     };
   }
 }
 
 export default new AuthService();
-

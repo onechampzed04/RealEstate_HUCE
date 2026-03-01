@@ -34,19 +34,19 @@ const userSchema = new mongoose.Schema(
       default: "USER",
     },
 
-    package: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Package",
-      default: null,
-    },
-
-    packageExpiredAt: {
-      type: Date,
-    },
-
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    avatarUrl: {
+      type: String,
+      default: null,
+    },
+
+    avatarPublicId: {
+      type: String,
+      default: null,
     },
   },
   { timestamps: true },
