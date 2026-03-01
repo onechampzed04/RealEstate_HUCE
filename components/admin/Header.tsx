@@ -1,8 +1,14 @@
 import { Bell, Search } from "lucide-react";
 import { useLocation } from "react-router-dom";
+import { useAdminAuth } from "../../context/AdminAuthContext";
 
 export default function Header() {
   const location = useLocation();
+  const { admin, token, loading } = useAdminAuth();
+
+  console.log("Header - admin:", admin);
+  console.log("Header - token:", token);
+  console.log("Header - loading:", loading);
 
   // Lấy phần sau /admin/
   const currentPath = location.pathname.split("/")[2] || "dashboard";
