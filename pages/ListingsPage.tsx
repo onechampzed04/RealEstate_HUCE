@@ -25,7 +25,7 @@ const ListingsPage: React.FC = () => {
     setLoading(true);
     try {
       const data = await fetchProperties(keyword, type, price);
-      setProperties(data);
+      setProperties(data.listings);
     } catch (error) {
       console.error('Failed to fetch properties:', error);
     } finally {
@@ -116,10 +116,10 @@ const ListingsPage: React.FC = () => {
             className="p-2 border rounded-md"
           >
             <option value="">Loại hình</option>
-            <option value="House">Nhà</option>
-            <option value="Apartment">Căn hộ</option>
-            <option value="Villa">Biệt thự</option>
-            <option value="Land">Đất</option>
+            <option value="HOUSE">Nhà</option>
+            <option value="APARTMENT">Căn hộ</option>
+            <option value="VILLA">Biệt thự</option>
+            <option value="LAND">Đất</option>
           </select>
 
           {/* Price */}
@@ -143,7 +143,7 @@ const ListingsPage: React.FC = () => {
             <option value={1000}>1 km</option>
             <option value={3000}>3 km</option>
             <option value={5000}>5 km</option>
-            <option value={10000}>10 km</option>
+            <option value={50000}>50 km</option>
           </select>
 
           {/* Nearby Button */}

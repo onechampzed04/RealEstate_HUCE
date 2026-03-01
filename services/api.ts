@@ -3,24 +3,34 @@ import type { Property } from '../types';
 
 const BASE_URL = 'http://localhost:5001/api';
 
+export interface ListingResponse {
+  listings: Property[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
 async function handleResponse(response: Response) {
-    const data = await response.json();
-    if (!response.ok) {
-        throw new Error(data.message || 'An API error occurred');
-    }
-    return data.data || data;
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || 'An API error occurred');
+  }
+  return data.data; // backend đang return data: { listings, pagination }
 }
 
 export const fetchProperties = async (
   keyword?: string,
-  type?: string,
+  propertyType?: string,
   price?: string
-): Promise<Property[]> => {
+): Promise<ListingResponse> => {
 
   const params = new URLSearchParams();
 
   if (keyword) params.append("keyword", keyword);
-  if (type) params.append("type", type);
+  if (propertyType) params.append("propertyType", propertyType);
   if (price) params.append("price", price);
 
   const response = await fetch(`${BASE_URL}/listings?${params.toString()}`);
