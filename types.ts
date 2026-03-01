@@ -34,3 +34,18 @@ export interface User {
   avatarUrl?: string; // Legacy field for backward compatibility
   role?: string;
 }
+
+export interface Package {
+  _id: string;
+  name: string;
+  type: 'FREE' | 'BASIC' | 'PRO' | 'VIP';
+  description: string;
+  maxPostsPerDay: number;
+  maxTotalPosts: number; // k dung
+  price: number;
+  durationDays: number;
+  allowHotPost: boolean;
+  autoApprove: boolean;
+  priority: number;
+  isActive: boolean;
+}

@@ -1,6 +1,7 @@
 import { z } from "zod";
 
 export const validate = (schema) => (req, res, next) => {
+  console.log("Validating request with schema:", req.body);
   try {
     // Only validate what is defined in the schema
     // If schema has .strict(), it will reject unknown keys
