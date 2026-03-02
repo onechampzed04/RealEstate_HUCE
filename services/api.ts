@@ -216,3 +216,43 @@ export const uploadAvatar = async (file: File, token: string) => {
     });
     return handleResponse(response);
 };
+
+// api cho gói đăng tin
+export const fetchActivePackages = async (): Promise<any[]> => {
+    const response = await fetch(`${BASE_URL}/packages`);
+    return handleResponse(response);
+};
+
+export const fetchMyActivePackage = async (token: string): Promise<any | null> => {
+    const response = await fetch(`${BASE_URL}/user-packages/my-active`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    // Gói cước có thể không tồn tại, nên cần xử lý lỗi 404 một cách nhẹ nhàng
+    if (response.status === 404) {
+        return null;
+    }
+    return handleResponse(response);
+};
+// api cho thanh toán
+export const createPaymentLink = async (packageId: string, token: string): Promise<any> => {
+    const response = await fetch(`${BASE_URL}/payments/create-link`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify({ packageId }),
+    });
+    return handleResponse(response);
+};
+
+export const checkOrderStatus = async (orderCode: number, token: string): Promise<{ status: string }> => {
+    const response = await fetch(`${BASE_URL}/payments/status/${orderCode}`, {
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+    });
+    return handleResponse(response);
+};
