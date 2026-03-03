@@ -47,18 +47,12 @@ router.post("/upload-avatar", authenticate, upload.single("avatar"), uploadAvata
 
 // Protected endpoints - User profile
 router.get("/profile", authenticate, (req, res) => {
-  // const avatar = req.user.avatar && req.user.avatar.url 
-  //   ? req.user.avatar.url 
-  //   : null;
-  
-  res.json({
+  res.status(200).json({
     success: true,
-    message: "User profile",
     data: {
-      id: req.user._id,
+      _id: req.user._id,
       name: req.user.name,
       email: req.user.email,
-      phone: req.user.phone,
       role: req.user.role,
       avatar: {
         url: req.user.avatarUrl || null,

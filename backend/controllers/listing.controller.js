@@ -18,6 +18,7 @@ export default class ListingController {
     const result = await this.listingService.getAll(req.query);
 
     console.log("cache hỏng, lấy dữ liệu mới từ database");
+    console.log("cache hỏng, lấy dữ liệu mới từ database");
 
     res.json({
       success: true,
@@ -63,6 +64,24 @@ export default class ListingController {
     });
   });
 
+  // ===============================================================
+// LẤY LISTING THEO ID
+// ===============================================================
+getListingById = asyncHandler(async (req, res) => {
+  const listing = await Listing.findById(req.params.id);
+
+  if (!listing) {
+    return res.status(404).json({
+      success: false,
+      message: "Không tìm thấy bất động sản",
+    });
+  }
+
+  res.json({
+    success: true,
+    data: listing,
+  });
+});
   // ===============================================================
   // ĐỊNH GIÁ AI
   // ===============================================================

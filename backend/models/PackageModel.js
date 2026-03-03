@@ -2,47 +2,34 @@ import mongoose from "mongoose";
 
 const packageSchema = new mongoose.Schema(
   {
-    name: {
+    name: { type: String, required: true, unique: true, trim: true },
+
+    type: {
       type: String,
-      required: true,
-      unique: true,
-      trim: true,
-    },
-
-    maxPostsPerDay: {
-      type: Number,
-      default: 1,
-    },
-
-    price: {
-      type: Number,
+      enum: ["BASIC", "PREMIUM"],
       required: true,
     },
 
-    durationDays: {
-      type: Number,
-      required: true,
-    },
+    description: String,
 
-    allowHotPost: {
-      type: Boolean,
-      default: false,
-    },
+    maxPostsPerDay: { type: Number, default: 1, min: 0 },
 
-    autoApprove: {
-      type: Boolean,
-      default: false,
-    },
+    // maxTotalPosts: { type: Number, default: 1, min: 0 },
 
-    isActive: {
-      type: Boolean,
-      default: true,
-    },
+    price: { type: Number, required: true, min: 0 },
+
+    durationDays: { type: Number, required: true, min: 1 },
+
+    allowHotPost: { type: Boolean, default: false },
+
+    autoApprove: { type: Boolean, default: false },
+
+    priority: { type: Number, default: 0 },
+
+    isActive: { type: Boolean, default: true },
   },
   { timestamps: true },
 );
 
 const Package = mongoose.model("Package", packageSchema);
 export default Package;
-
-//wAjtuwQqWAvIehKe

@@ -2,6 +2,7 @@ import express from "express";
 import ListingController from "../controllers/listing.controller.js";
 import { cacheMiddleware } from "../middleware/cacheMiddleware.js";
 
+
 const router = express.Router();
 const listingController = new ListingController();
 
@@ -22,6 +23,11 @@ router.get(
 router.post(
   "/valuation",
   listingController.getValuation
+);
+
+// Lấy listing theo ID
+router.get(
+  "/:id", listingController.getListingById
 );
 
 export default router;
