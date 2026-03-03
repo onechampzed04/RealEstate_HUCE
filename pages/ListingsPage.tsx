@@ -9,11 +9,10 @@ const ListingsPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
 
   const [keyword, setKeyword] = useState('');
-  const [type, setType] = useState('');
+  const [propertyType, setPropertyType] = useState('');
   const [price, setPrice] = useState('');
 
   const [radius, setRadius] = useState(3000);
-  const [isNearbyMode, setIsNearbyMode] = useState(false);
 
   // Load toàn bộ khi vào trang lần đầu
   useEffect(() => {
@@ -24,7 +23,7 @@ const ListingsPage: React.FC = () => {
   const handleSearch = async () => {
     setLoading(true);
     try {
-      const data = await fetchProperties(keyword, type, price);
+      const data = await fetchProperties(keyword, propertyType, price);
       setProperties(data.listings);
     } catch (error) {
       console.error('Failed to fetch properties:', error);
@@ -40,7 +39,6 @@ const ListingsPage: React.FC = () => {
   }
 
   setLoading(true);
-  setIsNearbyMode(true);
 
   navigator.geolocation.getCurrentPosition(
     async (position) => {
@@ -111,8 +109,8 @@ const ListingsPage: React.FC = () => {
 
           {/* Type */}
           <select
-            value={type}
-            onChange={(e) => setType(e.target.value)}
+            value={propertyType}
+            onChange={(e) => setPropertyType(e.target.value)}
             className="p-2 border rounded-md"
           >
             <option value="">Loại hình</option>
