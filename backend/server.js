@@ -52,7 +52,7 @@ app.use("/api/listings", listingRoutes);
 app.use("/api/payments", paymentRoutes);
 app.use("/api/users", authRoutes);
 app.use("/api/user-packages", userPackageRoutes);
-app.use("/api/user", user);
+app.use("/api/admin", user);
 
 app.use("/api/upload", uploadRoutes);
 
