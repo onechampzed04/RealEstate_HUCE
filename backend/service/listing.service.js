@@ -1,4 +1,4 @@
-import { clearAllCache, clearCacheKey } from "../middleware/cacheMiddleware.js";
+import {clearCacheKey } from "../middleware/cacheMiddleware.js";
 import ListingModel from "../models/ListingModel.js";
 
 export default class ListingService {
@@ -17,8 +17,6 @@ export default class ListingService {
     type,
     propertyType,
     price,
-    minPrice,
-    maxPrice,
   } = query;
 
   const filter = { status: "APPROVED" };
@@ -54,12 +52,7 @@ export default class ListingService {
     }
   }
 
-  // 💰 Giá dạng range nâng cao
-  if (minPrice || maxPrice) {
-    filter.price = {};
-    if (minPrice) filter.price.$gte = Number(minPrice);
-    if (maxPrice) filter.price.$lte = Number(maxPrice);
-  }
+
 
   const skip = (page - 1) * limit;
   const limitNum = parseInt(limit);
