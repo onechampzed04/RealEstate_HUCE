@@ -36,7 +36,17 @@ export const fetchProperties = async (
   const response = await fetch(`${BASE_URL}/listings?${params.toString()}`);
   return handleResponse(response);
 };
+export const fetchNearbyProperties = async (
+  lat: number,
+  lng: number,
+  radius: number
+): Promise<Property[]> => {
+  const response = await fetch(
+    `${BASE_URL}/listings/nearby?lat=${lat}&lng=${lng}&radius=${radius}`
+  );
 
+  return handleResponse(response);
+};
 
 export const fetchFeaturedProperties = async (): Promise<Property[]> => {
     const response = await fetch(`${BASE_URL}/properties/featured`);

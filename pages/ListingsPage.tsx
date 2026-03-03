@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { fetchProperties } from '../services/api';
+import { fetchProperties,fetchNearbyProperties } from '../services/api';
 import type { Property } from '../types';
 import PropertyCard from '../components/PropertyCard';
 import Spinner from '../components/Spinner';
@@ -46,12 +46,8 @@ const ListingsPage: React.FC = () => {
       const lng = position.coords.longitude;
 
       try {
-        const res = await fetch(
-          `/api/listings/nearby?lat=${lat}&lng=${lng}&radius=${radius}`
-        );
-
-        const data = await res.json();
-        setProperties(data.data);
+        const data = await fetchNearbyProperties(lat, lng, radius);
+        setProperties(data);
       } catch (error) {
         console.error("Nearby search failed:", error);
       } finally {
