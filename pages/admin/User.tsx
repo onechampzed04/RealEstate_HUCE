@@ -1,7 +1,10 @@
-import { Download, Filter, MoreVertical, UserPlus } from "lucide-react";
+import { Download, MoreVertical, UserPlus } from "lucide-react";
 import { cn } from "../../lib/utils";
 import React, { useState } from "react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+
 const Users: React.FC = () => {
   const { getAllUsers } = useAdminAuth();
   type SortField = "name" | "isActive" | "createdAt" | "package";
@@ -115,14 +118,74 @@ const Users: React.FC = () => {
     );
   };
 
+  
+  const handleExportExcel = async () => {
+    try {
+      // build sort giống như khi fetch
+      const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
+        (acc, item) => {
+          acc[item.field] = item.order;
+          return acc;
+        },
+        {} as Record<SortField, SortOrder>
+      );
+
+      // gọi API lấy toàn bộ user
+      const res = await getAllUsers({
+        page: 1,
+        limit: pagination.total || 10000, // fallback nếu total chưa có
+        sort: sortQuery,
+      });
+
+      const allUsers = res?.data?.users || [];
+
+      if (!allUsers.length) {
+        alert("Không có dữ liệu để xuất");
+        return;
+      }
+
+      // format lại dữ liệu cho đẹp
+      const formattedData = allUsers.map((user: any, index: number) => ({
+        STT: index + 1,
+        "Tên người dùng": user.name,
+        Email: user.email,
+        "Trạng thái": user.isActive ? "Active" : "Inactive",
+        "Gói đăng ký": user.currentPackage?.package?.name || "N/A",
+        "Ngày tham gia": user.createdAt
+          ? new Date(user.createdAt).toLocaleDateString()
+          : "N/A",
+      }));
+
+      // tạo worksheet
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+      // tạo workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+
+      // tạo file excel
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const fileData = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      saveAs(fileData, `users_${Date.now()}.xlsx`);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Xuất file thất bại");
+    }
+  };
+
   return (
     <div className="glass-card overflow-hidden">
       <div className="p-6 border-b border-slate-100 flex justify-between items-center">
         <div className="flex gap-4">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">
-            <Filter size={16} /> Bộ lọc
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50"
+            onClick={handleExportExcel}>
             <Download size={16} /> Xuất file
           </button>
         </div>
