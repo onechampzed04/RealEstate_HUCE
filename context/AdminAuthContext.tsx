@@ -14,12 +14,15 @@ interface Admin {
   role: "ADMIN";
 }
 
-interface GetUsersParams {
+export type SortOrder = "asc" | "desc";
+
+export interface GetUsersParams {
   page?: number;
   limit?: number;
   search?: string;
   role?: string;
   isActive?: boolean;
+  sort?: Record<string, "asc" | "desc">;
 }
 
 interface AdminAuthType {

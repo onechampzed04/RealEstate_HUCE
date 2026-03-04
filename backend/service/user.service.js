@@ -9,12 +9,10 @@ class UserService {
   async getUserAll(query) {
     const {
       search,
-      phone,
-      email,
-      name,
-      status,
       role,
       isActive,
+      package: packageId,
+      sort = {},
       page = 1,
       limit = 8,
     } = query;
@@ -22,37 +20,60 @@ class UserService {
     const filter = {};
 
     // 🔒 Loại trừ ADMIN mặc định
-    if (role) {
-      filter.role = role;
-    } else {
-      filter.role = { $ne: "ADMIN" };
-    }
+    filter.role = role ? role : { $ne: "ADMIN" };
 
     // 🔎 Search
     if (search) {
       filter.$or = [
-        { name: { $regex: search, $options: "i" } }, // name cho phép chứa
-        { email: search.toLowerCase() }, // email chính xác
-        { phone: search }, // phone chính xác
+        { name: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { phone: { $regex: search, $options: "i" } },
       ];
     }
 
-    // 🔥 Fix boolean
     if (isActive !== undefined) {
       filter.isActive = isActive === "true";
     }
 
     const skip = (page - 1) * parseInt(limit);
     const limitNum = parseInt(limit);
-    
-    const users = await User.aggregate([
-      { $match: filter },
 
-      { $sort: { createdAt: -1 } },
+    // ===== MULTI SORT =====
+
+    const allowedSortFields = ["createdAt", "name", "isActive", "package"];
+
+    let mongoSort = {};
+
+    Object.entries(sort).forEach(([field, order]) => {
+      if (!allowedSortFields.includes(field)) return;
+
+      const direction = order === "asc" ? 1 : -1;
+
+      switch (field) {
+        case "name":
+          mongoSort["nameLower"] = direction;
+          break;
+
+        case "package":
+          mongoSort["packageNameLower"] = direction;
+          break;
+
+        default:
+          mongoSort[field] = direction;
+      }
+    });
+
+    // fallback
+    if (Object.keys(mongoSort).length === 0) {
+      mongoSort = { createdAt: -1 };
+    }
+
+    const result = await User.aggregate([
+      { $match: filter },
 
       {
         $lookup: {
-          from: "userpackages", // tên collection (phải đúng MongoDB)
+          from: "userpackages",
           let: { userId: "$_id" },
           pipeline: [
             {
@@ -61,6 +82,16 @@ class UserService {
                   $and: [
                     { $eq: ["$user", "$$userId"] },
                     { $eq: ["$status", "ACTIVE"] },
+                    ...(packageId
+                      ? [
+                          {
+                            $eq: [
+                              "$package",
+                              new mongoose.Types.ObjectId(packageId),
+                            ],
+                          },
+                        ]
+                      : []),
                   ],
                 },
               },
@@ -87,20 +118,46 @@ class UserService {
       {
         $unwind: {
           path: "$currentPackage",
-          preserveNullAndEmptyArrays: true,
+          preserveNullAndEmptyArrays: !packageId,
+        },
+      },
+
+      ...(packageId
+        ? [{ $match: { currentPackage: { $ne: null } } }]
+        : []),
+
+      // 👇 luôn tạo nameLower để sort ổn định
+      {
+        $addFields: {
+          nameLower: { $toLower: "$name" },
+          packageNameLower: {
+            $toLower: {
+              $ifNull: ["$currentPackage.package.name", ""]
+            }
+          }
         },
       },
 
       {
-        $project: {
-          password: 0, // ẩn password
+        $facet: {
+          users: [
+            { $sort: mongoSort },
+            { $skip: skip },
+            { $limit: limitNum },
+            {
+              $project: {
+                password: 0,
+                nameLower: 0,
+              },
+            },
+          ],
+          totalCount: [{ $count: "total" }],
         },
       },
-
-      { $skip: skip },
-      { $limit: limitNum },
     ]);
-    const total = await User.countDocuments(filter);
+
+    const users = result[0].users;
+    const total = result[0].totalCount[0]?.total || 0;
 
     return {
       users,

@@ -42,7 +42,7 @@ export const cacheMiddleware = ({
       return next();
     }
 
-    const key = keyGenerator(req);
+    const key = `users:${req.originalUrl}`;
 
     const cachedResponse = cache.get(key);
 

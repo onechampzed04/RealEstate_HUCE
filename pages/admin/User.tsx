@@ -1,9 +1,20 @@
 import { Download, Filter, MoreVertical, UserPlus } from "lucide-react";
 import { cn } from "../../lib/utils";
-import React from "react";
+import React, { useState } from "react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 const Users: React.FC = () => {
   const { getAllUsers } = useAdminAuth();
+  type SortField = "name" | "isActive" | "createdAt" | "package";
+  type SortOrder = "asc" | "desc";
+
+  interface SortItem {
+    field: SortField;
+    order: SortOrder;
+  }
+
+  const [sorts, setSorts] = useState<SortItem[]>([
+    { field: "createdAt", order: "desc" }
+  ]);
   const [users, setUsers] = React.useState<any[]>([]);
   const [pagination, setPagination] = React.useState({
     page: 1,
@@ -15,17 +26,66 @@ const Users: React.FC = () => {
   React.useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await getAllUsers({ page: pagination.page });
-        setUsers(res.data.users);
-        setPagination(res.data.pagination);
+        const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
+          (acc, item) => {
+            acc[item.field] = item.order;
+            return acc;
+          },
+          {} as Record<SortField, SortOrder>
+        );
+
+        const res = await getAllUsers({
+          page: pagination.page,
+          sort: sortQuery,
+        });
+
+        if (res?.data?.users){
+          setUsers(res.data.users);
+        }
+        if (res?.data?.pagination) {
+          setPagination(res.data.pagination);
+        }
       } catch (error) {
         console.error("Failed to fetch users:", error);
       }
     };
 
     fetchUsers();
-  }, [pagination.page, getAllUsers]);
-  
+  }, [pagination.page, sorts, getAllUsers]);
+
+  const handleSort = (field: SortField) => {
+    setSorts(prev => {
+      const existing = prev.find(s => s.field === field);
+      if (!existing) {
+        return [...prev, { field, order: "asc" }];
+      }
+      if (existing.order === "asc") {
+        return prev.map(s =>
+          s.field === field ? { ...s, order: "desc" } : s
+        );
+      }
+      return prev.filter(s => s.field !== field);
+    });
+
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const renderSortIcon = (field: SortField) => {
+    const index = sorts.findIndex(s => s.field === field);
+    if (index === -1) {
+      return <span className="ml-1 text-slate-300">↕</span>;
+    }
+
+    const order = sorts[index].order;
+
+    return (
+      <span className="ml-1 flex items-center gap-1">
+        {order === "asc" ? "↑" : "↓"}
+        <span className="text-[10px] text-slate-400">{index + 1}</span>
+      </span>
+    );
+  };
+
   return (
     <div className="glass-card overflow-hidden">
       <div className="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -45,17 +105,44 @@ const Users: React.FC = () => {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-slate-50/50">
-              <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Người dùng
+              <th
+                onClick={() => handleSort("name")}
+                className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
+              >
+                <div className="flex items-center">
+                  Người dùng
+                  {renderSortIcon("name")}
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Trạng thái
+
+              <th
+                onClick={() => handleSort("isActive")}
+                className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
+              >
+                <div className="flex items-center">
+                  Trạng thái
+                  {renderSortIcon("isActive")}
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Gói đăng ký
+
+              <th
+                onClick={() => handleSort("package")}
+                className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
+              >
+                <div className="flex items-center">
+                  Gói đăng ký
+                  {renderSortIcon("package")}
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Ngày tham gia
+
+              <th
+                onClick={() => handleSort("createdAt")}
+                className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
+              >
+                <div className="flex items-center">
+                  Ngày tham gia
+                  {renderSortIcon("createdAt")}
+                </div>
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">
                 Hành động
