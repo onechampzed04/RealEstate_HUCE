@@ -49,6 +49,9 @@ app.use(express.json());
 
 app.use("/api/packages", packageRoutes);
 app.use("/api/listings", listingRoutes);
+
+app.use("/api/auth", authRoutes);
+
 app.use("/api/payments", paymentRoutes);
 app.use("/api/users", authRoutes);
 app.use("/api/user-packages", userPackageRoutes);

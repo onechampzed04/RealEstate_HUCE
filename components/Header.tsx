@@ -147,13 +147,14 @@ const Header: React.FC = () => {
               <div className="ml-4 flex items-center md:ml-6">
                 {user ? (
                   <div className="flex items-center space-x-4">
-                  <div className="flex items-center gap-2">
-                    <AvatarPlaceholder
-                      name={user.name}
-                      avatarUrl={user.avatar?.url || undefined}
-                      size="sm"
-                    />
-                    <span className="text-gray-700">Chào, {user.name}</span>
+                    <div className="flex items-center gap-2">
+                      <AvatarPlaceholder
+                        name={user.name}
+                        avatarUrl={user.avatar?.url || undefined}
+                        size="sm"
+                      />
+                      <span className="text-gray-700">Chào, {user.name}</span>
+                    </div>
                     {activeUserPackage !== undefined && (
                       <Button
                         variant="primary"
@@ -165,7 +166,6 @@ const Header: React.FC = () => {
                         {isHovering ? 'Mua Credit?' : `Credits: ${remainingPosts}`}
                       </Button>
                     )}
-                  </div>
                     <Link to="/profile">
                       <Button variant="secondary" size="sm">Hồ Sơ</Button>
                     </Link>
