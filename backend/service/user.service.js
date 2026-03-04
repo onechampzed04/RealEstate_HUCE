@@ -16,7 +16,7 @@ class UserService {
       role,
       isActive,
       page = 1,
-      limit = 10,
+      limit = 8,
     } = query;
 
     const filter = {};
@@ -44,14 +44,62 @@ class UserService {
 
     const skip = (page - 1) * parseInt(limit);
     const limitNum = parseInt(limit);
+    
+    const users = await User.aggregate([
+      { $match: filter },
 
-    const users = await User.find(filter)
-      .select("-password")
-      .skip(skip)
-      .limit(limitNum)
-      .sort({ createdAt: -1 })
-      .lean();
+      { $sort: { createdAt: -1 } },
 
+      {
+        $lookup: {
+          from: "userpackages", // tên collection (phải đúng MongoDB)
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ["$user", "$$userId"] },
+                    { $eq: ["$status", "ACTIVE"] },
+                  ],
+                },
+              },
+            },
+            {
+              $lookup: {
+                from: "packages",
+                localField: "package",
+                foreignField: "_id",
+                as: "package",
+              },
+            },
+            {
+              $unwind: {
+                path: "$package",
+                preserveNullAndEmptyArrays: true,
+              },
+            },
+          ],
+          as: "currentPackage",
+        },
+      },
+
+      {
+        $unwind: {
+          path: "$currentPackage",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      {
+        $project: {
+          password: 0, // ẩn password
+        },
+      },
+
+      { $skip: skip },
+      { $limit: limitNum },
+    ]);
     const total = await User.countDocuments(filter);
 
     return {

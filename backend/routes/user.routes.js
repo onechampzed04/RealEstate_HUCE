@@ -10,7 +10,7 @@ const userPackageController = new UserPackageController();
 const { getMyActivePackage, purchasePackage } = userPackageController;
 router.post("/purchase", authenticate, purchasePackage);
 router.get(
-  "/",
+  "/users",
   authenticate,
   isAdmin,
   cacheMiddleware({ ttl: 300 }),

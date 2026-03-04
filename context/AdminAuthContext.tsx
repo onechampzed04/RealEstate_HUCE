@@ -14,12 +14,21 @@ interface Admin {
   role: "ADMIN";
 }
 
+interface GetUsersParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  role?: string;
+  isActive?: boolean;
+}
+
 interface AdminAuthType {
   admin: Admin | null;
   token: string | null;
   loading: boolean;
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
+  getAllUsers: (params?: GetUsersParams) => Promise<any>;
 }
 
 const AdminAuthContext = createContext<AdminAuthType | null>(null);
@@ -83,8 +92,12 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     setAdmin(null);
   };
 
+  const getAllUsers = async (params?: GetUsersParams) => {
+    return adminApi.get("/admin/users", { params });
+  };
+  
   return (
-    <AdminAuthContext.Provider value={{ admin, token, loading, login, logout }}>
+    <AdminAuthContext.Provider value={{ admin, token, loading, login, logout, getAllUsers }}>
       {children}
     </AdminAuthContext.Provider>
   );
