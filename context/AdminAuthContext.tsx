@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from "react";
 import adminApi from "../lib/adminApi";
 
@@ -95,10 +96,10 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     setAdmin(null);
   };
 
-  const getAllUsers = async (params?: GetUsersParams) => {
+  const getAllUsers = useCallback(async (params?: GetUsersParams) => {
     return adminApi.get("/admin/users", { params });
-  };
-  
+  }, []);
+
   return (
     <AdminAuthContext.Provider value={{ admin, token, loading, login, logout, getAllUsers }}>
       {children}

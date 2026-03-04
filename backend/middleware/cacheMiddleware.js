@@ -18,11 +18,25 @@ const defaultKeyGenerator = (req) => {
   // Sort query params to avoid duplicate keys
   const queryKeys = Object.keys(req.query).sort();
 
-  const queryString = queryKeys
-    .map((key) => `${key}:${req.query[key]}`)
-    .join(":");
+  const normalizedQuery = queryKeys.map((key) => {
+    const value = req.query[key];
 
-  return queryString ? `${base}:${queryString}` : base;
+    // Nếu là object (ví dụ sort) thì serialize theo cách sắp xếp key bên trong để tránh trùng lặp cache
+    if (typeof value === "object" && value !== null) {
+      const sortedObjectKeys = Object.keys(value).sort();
+      const normalizedObject = sortedObjectKeys
+        .map((k) => `${k}:${value[k]}`)
+        .join(",");
+
+      return `${key}:{${normalizedObject}}`;
+    }
+
+    return `${key}:${value}`;
+  });
+
+  return normalizedQuery.length
+    ? `${base}?${normalizedQuery.join("&")}`
+    : base;
 };
 
 /**
@@ -42,16 +56,14 @@ export const cacheMiddleware = ({
       return next();
     }
 
-    const key = `users:${req.originalUrl}`;
+    const key = keyGenerator(req);
 
     const cachedResponse = cache.get(key);
 
     if (cachedResponse) {
-      console.log("cache hit");
       if (debug) console.log(`[CACHE HIT] ${key}`);
       return res.json(cachedResponse);
     }
-    console.log("cache miss");
 
     if (debug) console.log(`[CACHE MISS] ${key}`);
 

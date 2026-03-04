@@ -19,7 +19,7 @@ export const authenticate = asyncHandler(async (req, res, next) => {
   try {
     // 2️⃣ Verify token
     const decoded = jwt.verify(token, JWT_CONFIG.ACCESS_TOKEN_SECRET);
-    console.log("Decoded token:", decoded); // Debugging line
+    console.log("Decoded token:", req.method, req.originalUrl, decoded); // Debugging line
     // 3️⃣ Tìm user từ decoded data
     const user = await User.findById(decoded.id);
 

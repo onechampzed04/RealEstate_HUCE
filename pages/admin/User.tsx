@@ -53,18 +53,47 @@ const Users: React.FC = () => {
     fetchUsers();
   }, [pagination.page, sorts, getAllUsers]);
 
+  const SINGLE_SORT_FIELDS: SortField[] = ["name", "createdAt"];
+
   const handleSort = (field: SortField) => {
     setSorts(prev => {
+      const isSingleField = SINGLE_SORT_FIELDS.includes(field);
       const existing = prev.find(s => s.field === field);
-      if (!existing) {
-        return [...prev, { field, order: "asc" }];
+
+      // ====== Nếu là SINGLE SORT FIELD ======
+      if (isSingleField) {
+        if (!existing) {
+          // chưa có → thay toàn bộ bằng field này
+          return [{ field, order: "asc" }];
+        }
+
+        if (existing.order === "asc") {
+          return [{ field, order: "desc" }];
+        }
+
+        // nếu đang desc → bỏ luôn
+        return [];
       }
-      if (existing.order === "asc") {
-        return prev.map(s =>
+
+      // ====== Nếu là MULTI SORT FIELD ======
+      // Nếu trước đó đang có single sort thì clear nó
+      const filteredPrev = prev.filter(
+        s => !SINGLE_SORT_FIELDS.includes(s.field)
+      );
+
+      const existingMulti = filteredPrev.find(s => s.field === field);
+
+      if (!existingMulti) {
+        return [...filteredPrev, { field, order: "asc" }];
+      }
+
+      if (existingMulti.order === "asc") {
+        return filteredPrev.map(s =>
           s.field === field ? { ...s, order: "desc" } : s
         );
       }
-      return prev.filter(s => s.field !== field);
+
+      return filteredPrev.filter(s => s.field !== field);
     });
 
     setPagination(prev => ({ ...prev, page: 1 }));
