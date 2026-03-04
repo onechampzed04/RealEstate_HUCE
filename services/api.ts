@@ -48,6 +48,16 @@ export const fetchNearbyProperties = async (
   return handleResponse(response);
 };
 
+export const fetchMyListings = async (token: string) => {
+  const response = await fetch(`${BASE_URL}/listings/my-listings`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return handleResponse(response);
+};
+
 export const fetchFeaturedProperties = async (): Promise<Property[]> => {
     const response = await fetch(`${BASE_URL}/properties/featured`);
     return handleResponse(response);

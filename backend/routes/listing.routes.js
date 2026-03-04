@@ -1,7 +1,7 @@
 import express from "express";
 import ListingController from "../controllers/listing.controller.js";
 import { cacheMiddleware } from "../middleware/cacheMiddleware.js";
-
+import { authenticate } from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 const listingController = new ListingController();
@@ -25,9 +25,11 @@ router.post(
   listingController.getValuation
 );
 
+router.get("/my-listings", authenticate, listingController.getMyListings);
 // Lấy listing theo ID
 router.get(
   "/:id", listingController.getListingById
 );
+
 
 export default router;

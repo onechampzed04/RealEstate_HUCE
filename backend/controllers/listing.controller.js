@@ -82,6 +82,38 @@ getListingById = asyncHandler(async (req, res) => {
     data: listing,
   });
 });
+
+// ===============================================================
+// LẤY DANH SÁCH BẤT ĐỘNG SẢN CỦA NGƯỜI DÙNG (PROFILE)
+// ===============================================================
+getMyListings = asyncHandler(async (req, res) => {
+  const userId = req.user.id;
+  const { status } = req.query;
+
+  let filter = {};
+
+  // Nếu là admin → có thể xem tất cả và lọc theo status
+  if (req.user.role === "ADMIN") {
+    if (status) {
+      filter.status = status; // lọc theo trạng thái
+    }
+  } 
+  // Nếu là user thường → chỉ xem bài của chính mình
+  else {
+    filter.user = userId;
+    if (status) {
+      filter.status = status; // có thể lọc PENDING / APPROVED của chính mình
+    }
+  }
+
+  const listings = await Listing.find(filter).sort({ createdAt: -1 });
+
+  res.status(200).json({
+    success: true,
+    count: listings.length,
+    data: listings,
+  });
+});
   // ===============================================================
   // ĐỊNH GIÁ AI
   // ===============================================================
