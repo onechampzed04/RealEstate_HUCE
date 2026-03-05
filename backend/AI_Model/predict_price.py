@@ -79,8 +79,8 @@ MARKET_GROWTH_FACTOR = current_factor
 # SECTION 1: TẢI MODEL VÀ CÁC BIẾN TIỀN XỬ LÝ (NÂNG CAO)
 # =============================================================================pip install catboost
 try:
-    MODEL_PATH = r"D:\bds_merge\RealEstate_HUCE\backend\AI_Model\catboost_model.cbm"
-    PICKLE_PATH = r"D:\bds_merge\RealEstate_HUCE\backend\AI_Model\preprocess_globals.pkl"
+    MODEL_PATH = r"E:\test_cacnhanh\RealEstate_HUCE\backend\AI_Model\catboost_model.cbm"
+    PICKLE_PATH = r"E:\test_cacnhanh\RealEstate_HUCE\backend\AI_Model\preprocess_globals.pkl"
     model = CatBoostRegressor()
     model.load_model(MODEL_PATH)
     with open(PICKLE_PATH, "rb") as f:
