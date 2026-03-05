@@ -163,15 +163,15 @@ export default function Plans() {
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Xác nhận xóa gói cước này? Hành động này không thể hoàn tác.")) return;
-    try {
-      await adminApi.delete(`/packages/${id}`);
-      fetchPlans();
-    } catch (err) {
-      alert("Lỗi xóa gói cước");
-    }
-  };
+  // const handleDelete = async (id: string) => {
+  //   if (!window.confirm("Xác nhận xóa gói cước này? Hành động này không thể hoàn tác.")) return;
+  //   try {
+  //     await adminApi.delete(`/packages/${id}`);
+  //     fetchPlans();
+  //   } catch (err) {
+  //     alert("Lỗi xóa gói cước");
+  //   }
+  // };
 
   if (loading) {
     return (
@@ -278,10 +278,11 @@ export default function Plans() {
                             ? "text-rose-500 hover:bg-rose-50"
                             : "text-emerald-500 hover:bg-emerald-50"
                         )}
-                        title={plan.isActive ? "Khoá gói" : "Mở gói"}
+                        title={plan.isActive ? "Khoá gói (Sẽ tạm dừng gói của người dùng)" : "Mở gói (Sẽ kích hoạt lại gói)"}
                       >
                         {plan.isActive ? <PowerOff size={16} /> : <Power size={16} />}
                       </button>
+                      
                       <button
                         onClick={() => openEdit(plan)}
                         className="p-2 text-indigo-500 hover:bg-indigo-50 rounded-lg transition-colors"
@@ -289,13 +290,8 @@ export default function Plans() {
                       >
                         <Edit size={16} />
                       </button>
-                      <button
-                        onClick={() => handleDelete(plan._id)}
-                        className="p-2 text-slate-400 hover:text-rose-500 hover:bg-rose-50 rounded-lg transition-colors"
-                        title="Xóa"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+
+                      {/* Nút Xóa (Trash2) đã được loại bỏ ở đây */}
                     </div>
                   </td>
                 </tr>

@@ -133,20 +133,13 @@ export default class PackageService {
     return pkg;
   }
 
-  async toggleStatus(id) {
+  // backend/service/package.service.js
+async toggleStatus(id) {
     const pkg = await Package.findById(id);
     if (!pkg) throw new Error("Package not found");
 
     pkg.isActive = !pkg.isActive;
     await pkg.save();
-
-    this.invalidateCache();
-
-    emitRealtimeEvent("package:toggled", {
-      packageId: pkg._id,
-      isActive: pkg.isActive,
-    });
-
-    return pkg;
-  }
+    return pkg; // Phải return pkg để Controller nhận được giá trị mới
+}
 }

@@ -78,10 +78,16 @@ const EditUserModal: React.FC<EditUserModalProps> = ({
   };
 
   const handleChange = (field: keyof FormState) => (e: React.ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [field]: e.target.value }));
-    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
-  };
+  let value = e.target.value;
 
+  if (field === "phone") {
+    value = value.replace(/[^0-9]/g, ""); 
+    if (value.length > 10) return; 
+  }
+
+  setForm((prev) => ({ ...prev, [field]: value }));
+  if (errors[field]) setErrors((prev) => ({ ...prev, [field]: undefined }));
+};
   return (
     <div
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
