@@ -1,13 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Eye, Pencil, Trash2, RotateCcw } from "lucide-react";
+import { Eye, Pencil, Trash2, RotateCcw} from "lucide-react";
 
 interface Props {
   user: any;
   onDelete: (id: string) => void;
   onRestore: (id: string) => void;
+    handleOpenView: (user: any) => void;
+    handleOpenEdit: (user: any) => void;
 }
 
-const ActionMenu: React.FC<Props> = ({ user, onDelete, onRestore }) => {
+const ActionMenu: React.FC<Props> = ({ user, onDelete, onRestore, handleOpenView, handleOpenEdit }) => {
   const [open, setOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -35,12 +37,22 @@ const ActionMenu: React.FC<Props> = ({ user, onDelete, onRestore }) => {
       {open && (
         <div className="absolute right-0 mt-2 w-44 bg-white border border-slate-200 rounded-xl shadow-lg z-50 overflow-hidden">
 
-          <button className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-slate-50">
+          <button className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-slate-50"
+            onClick={() => {
+              handleOpenView(user);
+              setOpen(false);
+            }}
+          >
             <Eye size={16} />
             View
           </button>
 
-          <button className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-slate-50">
+          <button className="flex items-center gap-2 w-full px-4 py-2 text-sm hover:bg-slate-50"
+            onClick={() => {
+              handleOpenEdit(user);
+              setOpen(false);
+            }}
+          >
             <Pencil size={16} />
             Edit
           </button>
