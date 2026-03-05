@@ -9,22 +9,83 @@ import {
   YAxis,
 } from "recharts";
 
-const revenueData = [
-  { name: "Jan", value: 4000 },
-  { name: "Feb", value: 3000 },
-  { name: "Mar", value: 2000 },
-  { name: "Apr", value: 2780 },
-  { name: "May", value: 1890 },
-  { name: "Jun", value: 2390 },
-  { name: "Jul", value: 3490 },
-];
+import { useState, useEffect } from "react";
+import adminApi from "../../lib/adminApi";
 
 export default function Revenue() {
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [recentTransactions, setRecentTransactions] = useState<any[]>([]);
+  const [packages, setPackages] = useState<any[]>([]);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedPackage, setSelectedPackage] = useState("");
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      const params: any = { year: selectedYear };
+      if (selectedPackage) {
+        params.packageId = selectedPackage;
+      }
+      
+      const [revRes, txRes, pkgRes] = await Promise.all([
+        adminApi.get("/payments/revenue-stats", { params }),
+        adminApi.get("/payments/recent"),
+        adminApi.get("/packages/admin")
+      ]);
+
+      if (revRes.data.success) {
+        setRevenueData(revRes.data.data);
+      }
+      if (txRes.data.success) {
+        setRecentTransactions(txRes.data.data);
+      }
+      if (pkgRes.data.success) {
+        setPackages(pkgRes.data.data);
+      }
+    } catch (err) {
+      console.error("Lỗi tải thống kê", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStats();
+  }, [selectedYear, selectedPackage]);
+
   return (
     <div className="space-y-8">
+      {/* Filters */}
+      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+        <select
+          value={selectedYear}
+          onChange={(e) => setSelectedYear(Number(e.target.value))}
+          className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        >
+          {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(year => (
+            <option key={year} value={year}>Năm {year}</option>
+          ))}
+        </select>
+        
+        <select
+          value={selectedPackage}
+          onChange={(e) => setSelectedPackage(e.target.value)}
+          className="px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20"
+        >
+          <option value="">Tất cả các gói</option>
+          {packages.map(pkg => (
+            <option key={pkg._id} value={pkg._id}>{pkg.name}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         <div className="glass-card p-6">
-          <h2 className="text-lg font-bold mb-6">Doanh thu theo tháng</h2>
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-lg font-bold">Doanh thu theo tháng</h2>
+            {loading && <div className="text-sm border-2 border-indigo-600 border-t-transparent w-4 h-4 rounded-full animate-spin"></div>}
+          </div>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={revenueData}>
@@ -65,9 +126,9 @@ export default function Revenue() {
         <div className="glass-card p-6">
           <h2 className="text-lg font-bold mb-6">Giao dịch gần đây</h2>
           <div className="space-y-4">
-            {[1, 2, 3, 4, 5].map((i) => (
+            {recentTransactions.map((tx) => (
               <div
-                key={i}
+                key={tx._id}
                 className="flex items-center justify-between p-3 rounded-xl hover:bg-slate-50 transition-colors"
               >
                 <div className="flex items-center gap-3">
@@ -76,16 +137,19 @@ export default function Revenue() {
                   </div>
                   <div>
                     <p className="font-medium text-slate-900">
-                      Nâng cấp Premium
+                      Nâng cấp {tx.package?.name || "Gói"}
                     </p>
                     <p className="text-xs text-slate-500">
-                      23/02/2024 • #TRX-982{i}
+                      {new Date(tx.createdAt).toLocaleDateString("vi-VN")} • #{tx.orderCode} - {tx.user?.name || "Khách"}
                     </p>
                   </div>
                 </div>
-                <span className="font-bold text-slate-900">+299.000đ</span>
+                <span className="font-bold text-slate-900">+{tx.amount.toLocaleString("vi-VN")}đ</span>
               </div>
             ))}
+            {recentTransactions.length === 0 && !loading && (
+              <p className="text-center text-slate-500 text-sm py-4">Chưa có giao dịch gần đây</p>
+            )}
           </div>
         </div>
       </div>

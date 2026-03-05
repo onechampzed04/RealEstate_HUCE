@@ -35,4 +35,22 @@ export default class PaymentController {
       data: result
     });
   });
+
+  getRevenueStats = asyncHandler(async (req, res) => {
+    const { year, packageId } = req.query;
+    const stats = await this.paymentService.getRevenueStatistics(year, packageId);
+    
+    res.json({
+      success: true,
+      data: stats
+    });
+  });
+  
+  getRecentTransactions = asyncHandler(async (req, res) => {
+      const transactions = await this.paymentService.getRecentTransactions(5);
+      res.json({
+          success: true,
+          data: transactions
+      });
+  });
 }

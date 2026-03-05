@@ -28,7 +28,7 @@ export default function Plans() {
 
   const [formData, setFormData] = useState({
     name: "",
-    type: "standard",
+    type: "STANDARD",
     description: "",
     price: 0,
     durationDays: 30,
@@ -38,6 +38,8 @@ export default function Plans() {
     allowHotPost: false,
     autoApprove: false,
   });
+
+  const [displayPrice, setDisplayPrice] = useState("0");
 
   const fetchPlans = async () => {
     try {
@@ -73,7 +75,7 @@ export default function Plans() {
     setEditingPlan(null);
     setFormData({
       name: "",
-      type: "standard",
+      type: "STANDARD",
       description: "",
       price: 0,
       durationDays: 30,
@@ -83,6 +85,7 @@ export default function Plans() {
       allowHotPost: false,
       autoApprove: false,
     });
+    setDisplayPrice("0");
     setIsModalOpen(true);
   };
 
@@ -90,7 +93,7 @@ export default function Plans() {
     setEditingPlan(plan);
     setFormData({
       name: plan.name || "",
-      type: plan.type || "standard",
+      type: plan.type || "STANDARD",
       description: plan.description || "",
       price: plan.price || 0,
       durationDays: plan.durationDays || 30,
@@ -100,6 +103,7 @@ export default function Plans() {
       allowHotPost: plan.allowHotPost || false,
       autoApprove: plan.autoApprove || false,
     });
+    setDisplayPrice((plan.price || 0).toLocaleString("vi-VN"));
     setIsModalOpen(true);
   };
 
@@ -113,10 +117,23 @@ export default function Plans() {
     const { name, value, type } = e.target;
     // @ts-ignore
     const checked = e.target.checked;
+    
     setFormData((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
     }));
+  };
+
+  const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value.replace(/\D/g, "");
+    if (!value) {
+      setDisplayPrice("");
+      setFormData(prev => ({ ...prev, price: 0 }));
+      return;
+    }
+    const num = parseInt(value, 10);
+    setDisplayPrice(num.toLocaleString("vi-VN"));
+    setFormData(prev => ({ ...prev, price: num }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -375,15 +392,26 @@ export default function Plans() {
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">
                       Loại gói <span className="text-rose-500">*</span>
                     </label>
-                    <input
-                      type="text"
-                      name="type"
-                      required
-                      value={formData.type}
-                      onChange={handleInputChange}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all placeholder:text-slate-400"
-                      placeholder="vd: standard, vip"
-                    />
+                    <div className="relative">
+                      <select
+                        name="type"
+                        required
+                        value={formData.type}
+                        onChange={handleInputChange}
+                        className="w-full px-4 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all appearance-none uppercase"
+                      >
+                        <option value="FREE">Free</option>
+                        <option value="BASIC">Basic</option>
+                        <option value="STANDARD">Standard</option>
+                        <option value="PREMIUM">Premium</option>
+                        <option value="VIP">VIP</option>
+                        <option value="PRO">Pro</option>
+                        <option value="ENTERPRISE">Enterprise</option>
+                      </select>
+                      <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400">
+                        <ChevronRight className="rotate-90" size={16} />
+                      </div>
+                    </div>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-slate-700 mb-1.5">
@@ -391,12 +419,11 @@ export default function Plans() {
                     </label>
                     <div className="relative">
                       <input
-                        type="number"
+                        type="text"
                         name="price"
                         required
-                        min={0}
-                        value={formData.price}
-                        onChange={handleInputChange}
+                        value={displayPrice}
+                        onChange={handlePriceChange}
                         className="w-full pl-4 pr-12 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
                       />
                       <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400 font-medium">
