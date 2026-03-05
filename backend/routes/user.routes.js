@@ -16,7 +16,7 @@ router.get(
   cacheMiddleware({ ttl: 300 }),
   userController.getAllUsers,
 );
-router.delete("/:id", authenticate, isAdmin, userController.softDeleteUser);
-router.patch("/:id/restore", authenticate, isAdmin, userController.restoreUser);
+router.patch("/users/:id/soft-delete", authenticate, isAdmin, userController.softDeleteUser);
+router.patch("/users/:id/restore", authenticate, isAdmin, userController.restoreUser);
 
 export default router;

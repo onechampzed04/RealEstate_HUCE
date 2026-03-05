@@ -1,12 +1,13 @@
-import { Download, MoreVertical, UserPlus } from "lucide-react";
+import { Download, UserPlus } from "lucide-react";
 import { cn } from "../../lib/utils";
 import React, { useState } from "react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
+import ActionMenu from "../../components/admin/ActionMenu";
 
 const Users: React.FC = () => {
-  const { getAllUsers } = useAdminAuth();
+  const { getAllUsers, softDeleteUser, restoreUser } = useAdminAuth();
   type SortField = "name" | "isActive" | "createdAt" | "package";
   type SortOrder = "asc" | "desc";
 
@@ -19,6 +20,7 @@ const Users: React.FC = () => {
     { field: "createdAt", order: "desc" }
   ]);
   const [users, setUsers] = React.useState<any[]>([]);
+  const [search, setSearch] = useState("");
   const [pagination, setPagination] = React.useState({
     page: 1,
     totalPages: 1,
@@ -26,35 +28,36 @@ const Users: React.FC = () => {
     limit: 8,
   });
   
-  React.useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
-          (acc, item) => {
-            acc[item.field] = item.order;
-            return acc;
-          },
-          {} as Record<SortField, SortOrder>
-        );
+  const fetchUsers = async () => {
+    try {
+      const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
+        (acc, item) => {
+          acc[item.field] = item.order;
+          return acc;
+        },
+        {} as Record<SortField, SortOrder>
+      );
 
-        const res = await getAllUsers({
-          page: pagination.page,
-          sort: sortQuery,
-        });
+      const res = await getAllUsers({
+        page: pagination.page,
+        search,
+        sort: sortQuery
+      });
 
-        if (res?.data?.users){
-          setUsers(res.data.users);
-        }
-        if (res?.data?.pagination) {
-          setPagination(res.data.pagination);
-        }
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
+      if (res?.data?.users) {
+        setUsers(res.data.users);
       }
-    };
 
+      if (res?.data?.pagination) {
+        setPagination(res.data.pagination);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  React.useEffect(() => {
     fetchUsers();
-  }, [pagination.page, sorts, getAllUsers]);
+  }, [pagination.page, search, sorts]);
 
   const SINGLE_SORT_FIELDS: SortField[] = ["name", "createdAt"];
 
@@ -180,6 +183,42 @@ const Users: React.FC = () => {
     }
   };
 
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
+  };
+  
+  const handleSoftDelete = async (id: string) => {
+    console.log("Soft delete clicked", id);
+    try {
+      await softDeleteUser(id);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === id ? { ...u, isActive: false } : u
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleRestore = async (id: string) => {
+    console.log("Restore clicked", id);
+    try {
+      await restoreUser(id);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === id ? { ...u, isActive: true } : u
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="glass-card overflow-hidden">
       <div className="p-6 border-b border-slate-100 flex justify-between items-center">
@@ -188,6 +227,13 @@ const Users: React.FC = () => {
             onClick={handleExportExcel}>
             <Download size={16} /> Xuất file
           </button>
+          <input
+            type="text"
+            placeholder="Tìm tên, email, phone..."
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 shadow-lg shadow-indigo-200">
           <UserPlus size={16} /> Thêm người dùng
@@ -276,9 +322,11 @@ const Users: React.FC = () => {
                   {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className="p-1 text-slate-400 hover:text-slate-900 transition-colors">
-                    <MoreVertical size={18} />
-                  </button>
+                  <ActionMenu
+                    user={user}
+                    onDelete={handleSoftDelete}
+                    onRestore={handleRestore}
+                  />
                 </td>
               </tr>
             ))}

@@ -54,6 +54,8 @@ app.use("/api/auth", authRoutes);
 
 app.use("/api/payments", paymentRoutes);
 app.use("/api/users", authRoutes);
+app.use("/api/users/:id/soft-delete", user);
+app.use("/api/users/:id/restore", user);
 app.use("/api/user-packages", userPackageRoutes);
 app.use("/api/admin", user);
 

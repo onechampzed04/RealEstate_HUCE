@@ -33,6 +33,8 @@ interface AdminAuthType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   getAllUsers: (params?: GetUsersParams) => Promise<any>;
+  softDeleteUser: (userId: string) => Promise<any>;
+  restoreUser: (userId: string) => Promise<any>;
 }
 
 const AdminAuthContext = createContext<AdminAuthType | null>(null);
@@ -100,8 +102,16 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     return adminApi.get("/admin/users", { params });
   }, []);
 
+  const softDeleteUser = useCallback(async (userId: string) => {
+    return adminApi.patch(`/admin/users/${userId}/soft-delete`);
+  }, []);
+
+  const restoreUser = useCallback(async (userId: string) => {
+    return adminApi.patch(`/admin/users/${userId}/restore`);
+  }, []);
+
   return (
-    <AdminAuthContext.Provider value={{ admin, token, loading, login, logout, getAllUsers }}>
+    <AdminAuthContext.Provider value={{ admin, token, loading, login, logout, getAllUsers, softDeleteUser, restoreUser }}>
       {children}
     </AdminAuthContext.Provider>
   );
