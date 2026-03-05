@@ -4,6 +4,7 @@ import {
   useEffect,
   useState,
   ReactNode,
+  useCallback,
 } from "react";
 import adminApi from "../lib/adminApi";
 
@@ -14,12 +15,15 @@ interface Admin {
   role: "ADMIN";
 }
 
-interface GetUsersParams {
+export type SortOrder = "asc" | "desc";
+
+export interface GetUsersParams {
   page?: number;
   limit?: number;
   search?: string;
   role?: string;
   isActive?: boolean;
+  sort?: Record<string, "asc" | "desc">;
 }
 
 interface AdminAuthType {
@@ -29,6 +33,8 @@ interface AdminAuthType {
   login: (email: string, password: string) => Promise<void>;
   logout: () => void;
   getAllUsers: (params?: GetUsersParams) => Promise<any>;
+  softDeleteUser: (userId: string) => Promise<any>;
+  restoreUser: (userId: string) => Promise<any>;
 }
 
 const AdminAuthContext = createContext<AdminAuthType | null>(null);
@@ -92,12 +98,20 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
     setAdmin(null);
   };
 
-  const getAllUsers = async (params?: GetUsersParams) => {
+  const getAllUsers = useCallback(async (params?: GetUsersParams) => {
     return adminApi.get("/admin/users", { params });
-  };
-  
+  }, []);
+
+  const softDeleteUser = useCallback(async (userId: string) => {
+    return adminApi.patch(`/admin/users/${userId}/soft-delete`);
+  }, []);
+
+  const restoreUser = useCallback(async (userId: string) => {
+    return adminApi.patch(`/admin/users/${userId}/restore`);
+  }, []);
+
   return (
-    <AdminAuthContext.Provider value={{ admin, token, loading, login, logout, getAllUsers }}>
+    <AdminAuthContext.Provider value={{ admin, token, loading, login, logout, getAllUsers, softDeleteUser, restoreUser }}>
       {children}
     </AdminAuthContext.Provider>
   );

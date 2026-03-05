@@ -1,10 +1,26 @@
-import { Download, Filter, MoreVertical, UserPlus } from "lucide-react";
+import { Download, UserPlus } from "lucide-react";
 import { cn } from "../../lib/utils";
-import React from "react";
+import React, { useState } from "react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
+import ActionMenu from "../../components/admin/ActionMenu";
+
 const Users: React.FC = () => {
-  const { getAllUsers } = useAdminAuth();
+  const { getAllUsers, softDeleteUser, restoreUser } = useAdminAuth();
+  type SortField = "name" | "isActive" | "createdAt" | "package";
+  type SortOrder = "asc" | "desc";
+
+  interface SortItem {
+    field: SortField;
+    order: SortOrder;
+  }
+
+  const [sorts, setSorts] = useState<SortItem[]>([
+    { field: "createdAt", order: "desc" }
+  ]);
   const [users, setUsers] = React.useState<any[]>([]);
+  const [search, setSearch] = useState("");
   const [pagination, setPagination] = React.useState({
     page: 1,
     totalPages: 1,
@@ -12,30 +28,212 @@ const Users: React.FC = () => {
     limit: 8,
   });
   
-  React.useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await getAllUsers({ page: pagination.page });
-        setUsers(res.data.users);
-        setPagination(res.data.pagination);
-      } catch (error) {
-        console.error("Failed to fetch users:", error);
-      }
-    };
+  const fetchUsers = async () => {
+    try {
+      const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
+        (acc, item) => {
+          acc[item.field] = item.order;
+          return acc;
+        },
+        {} as Record<SortField, SortOrder>
+      );
 
+      const res = await getAllUsers({
+        page: pagination.page,
+        search,
+        sort: sortQuery
+      });
+
+      if (res?.data?.users) {
+        setUsers(res.data.users);
+      }
+
+      if (res?.data?.pagination) {
+        setPagination(res.data.pagination);
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+  React.useEffect(() => {
     fetchUsers();
-  }, [pagination.page, getAllUsers]);
+  }, [pagination.page, search, sorts]);
+
+  const SINGLE_SORT_FIELDS: SortField[] = ["name", "createdAt"];
+
+  const handleSort = (field: SortField) => {
+    setSorts(prev => {
+      const isSingleField = SINGLE_SORT_FIELDS.includes(field);
+      const existing = prev.find(s => s.field === field);
+
+      // ====== Nếu là SINGLE SORT FIELD ======
+      if (isSingleField) {
+        if (!existing) {
+          // chưa có → thay toàn bộ bằng field này
+          return [{ field, order: "asc" }];
+        }
+
+        if (existing.order === "asc") {
+          return [{ field, order: "desc" }];
+        }
+
+        // nếu đang desc → bỏ luôn
+        return [];
+      }
+
+      // ====== Nếu là MULTI SORT FIELD ======
+      // Nếu trước đó đang có single sort thì clear nó
+      const filteredPrev = prev.filter(
+        s => !SINGLE_SORT_FIELDS.includes(s.field)
+      );
+
+      const existingMulti = filteredPrev.find(s => s.field === field);
+
+      if (!existingMulti) {
+        return [...filteredPrev, { field, order: "asc" }];
+      }
+
+      if (existingMulti.order === "asc") {
+        return filteredPrev.map(s =>
+          s.field === field ? { ...s, order: "desc" } : s
+        );
+      }
+
+      return filteredPrev.filter(s => s.field !== field);
+    });
+
+    setPagination(prev => ({ ...prev, page: 1 }));
+  };
+
+  const renderSortIcon = (field: SortField) => {
+    const index = sorts.findIndex(s => s.field === field);
+    if (index === -1) {
+      return <span className="ml-1 text-slate-300">↕</span>;
+    }
+
+    const order = sorts[index].order;
+
+    return (
+      <span className="ml-1 flex items-center gap-1">
+        {order === "asc" ? "↑" : "↓"}
+        <span className="text-[10px] text-slate-400">{index + 1}</span>
+      </span>
+    );
+  };
+
   
+  const handleExportExcel = async () => {
+    try {
+      // build sort giống như khi fetch
+      const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
+        (acc, item) => {
+          acc[item.field] = item.order;
+          return acc;
+        },
+        {} as Record<SortField, SortOrder>
+      );
+
+      // gọi API lấy toàn bộ user
+      const res = await getAllUsers({
+        page: 1,
+        limit: pagination.total || 10000, // fallback nếu total chưa có
+        sort: sortQuery,
+      });
+
+      const allUsers = res?.data?.users || [];
+
+      if (!allUsers.length) {
+        alert("Không có dữ liệu để xuất");
+        return;
+      }
+
+      // format lại dữ liệu cho đẹp
+      const formattedData = allUsers.map((user: any, index: number) => ({
+        STT: index + 1,
+        "Tên người dùng": user.name,
+        Email: user.email,
+        "Trạng thái": user.isActive ? "Active" : "Inactive",
+        "Gói đăng ký": user.currentPackage?.package?.name || "N/A",
+        "Ngày tham gia": user.createdAt
+          ? new Date(user.createdAt).toLocaleDateString()
+          : "N/A",
+      }));
+
+      // tạo worksheet
+      const worksheet = XLSX.utils.json_to_sheet(formattedData);
+
+      // tạo workbook
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Users");
+
+      // tạo file excel
+      const excelBuffer = XLSX.write(workbook, {
+        bookType: "xlsx",
+        type: "array",
+      });
+
+      const fileData = new Blob([excelBuffer], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+
+      saveAs(fileData, `users_${Date.now()}.xlsx`);
+    } catch (error) {
+      console.error("Export failed:", error);
+      alert("Xuất file thất bại");
+    }
+  };
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPagination(prev => ({
+      ...prev,
+      page: 1
+    }));
+  };
+  
+  const handleSoftDelete = async (id: string) => {
+    console.log("Soft delete clicked", id);
+    try {
+      await softDeleteUser(id);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === id ? { ...u, isActive: false } : u
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  const handleRestore = async (id: string) => {
+    console.log("Restore clicked", id);
+    try {
+      await restoreUser(id);
+      setUsers((prev) =>
+        prev.map((u) =>
+          u._id === id ? { ...u, isActive: true } : u
+        )
+      );
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
   return (
     <div className="glass-card overflow-hidden">
       <div className="p-6 border-b border-slate-100 flex justify-between items-center">
         <div className="flex gap-4">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">
-            <Filter size={16} /> Bộ lọc
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50">
+          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-medium hover:bg-slate-50"
+            onClick={handleExportExcel}>
             <Download size={16} /> Xuất file
           </button>
+          <input
+            type="text"
+            placeholder="Tìm tên, email, phone..."
+            value={search}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          />
         </div>
         <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 shadow-lg shadow-indigo-200">
           <UserPlus size={16} /> Thêm người dùng
@@ -45,17 +243,44 @@ const Users: React.FC = () => {
         <table className="w-full text-left">
           <thead>
             <tr className="bg-slate-50/50">
-              <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Người dùng
+              <th
+                onClick={() => handleSort("name")}
+                className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
+              >
+                <div className="flex items-center">
+                  Người dùng
+                  {renderSortIcon("name")}
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Trạng thái
+
+              <th
+                onClick={() => handleSort("isActive")}
+                className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
+              >
+                <div className="flex items-center">
+                  Trạng thái
+                  {renderSortIcon("isActive")}
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Gói đăng ký
+
+              <th
+                onClick={() => handleSort("package")}
+                className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
+              >
+                <div className="flex items-center">
+                  Gói đăng ký
+                  {renderSortIcon("package")}
+                </div>
               </th>
-              <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                Ngày tham gia
+
+              <th
+                onClick={() => handleSort("createdAt")}
+                className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider cursor-pointer select-none"
+              >
+                <div className="flex items-center">
+                  Ngày tham gia
+                  {renderSortIcon("createdAt")}
+                </div>
               </th>
               <th className="px-6 py-4 text-xs font-semibold text-slate-500 uppercase tracking-wider text-right">
                 Hành động
@@ -97,9 +322,11 @@ const Users: React.FC = () => {
                   {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
                 </td>
                 <td className="px-6 py-4 text-right">
-                  <button className="p-1 text-slate-400 hover:text-slate-900 transition-colors">
-                    <MoreVertical size={18} />
-                  </button>
+                  <ActionMenu
+                    user={user}
+                    onDelete={handleSoftDelete}
+                    onRestore={handleRestore}
+                  />
                 </td>
               </tr>
             ))}

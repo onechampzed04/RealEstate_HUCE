@@ -47,3 +47,12 @@ export const restoreUser = asyncHandler(async (req, res) => {
     ...result,
   });
 });
+
+export const sortUsersByName = asyncHandler(async (req, res) => {
+  const { order } = req.query; // 'asc' or 'desc'
+  const users = await userService.sortByName(order);
+  res.status(200).json({ 
+    success: true,
+    users,
+  });
+});
