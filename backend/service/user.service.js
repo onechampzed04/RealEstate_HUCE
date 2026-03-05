@@ -190,6 +190,52 @@ class UserService {
     clearCacheKey("users");
     return { message: "User restored successfully" };
   }
+  async viewUserDetails(userId) {
+    const user = await User.findById(userId)
+      .select("-password -__v")
+      .lean();
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    return {
+      message: "User fetched successfully",
+      user,
+    };
+  }
+  async editUser(userId, updateData) {
+    const allowedFields = ["name", "email", "phone"];
+
+    const filteredData = {};
+
+    for (const key of allowedFields) {
+      if (updateData[key] !== undefined) {
+        filteredData[key] = updateData[key];
+      }
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      filteredData,
+      {
+        new: true,
+        runValidators: true,
+        select: "-password -__v",
+      }
+    );
+
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    clearCacheKey("users");
+
+    return {
+      message: "User updated successfully",
+      user,
+    };
+  }
 }
 
 export default UserService;

@@ -56,3 +56,36 @@ export const sortUsersByName = asyncHandler(async (req, res) => {
     users,
   });
 });
+
+export const viewUserDetails = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400);
+    throw new Error("Invalid user ID");
+  }
+
+  const user = await userService.viewUserDetails(id);
+
+  res.status(200).json({
+    success: true,
+    user,
+  });
+});
+
+export const editUser = asyncHandler(async (req, res) => {
+  const { id } = req.params;
+  const updateData = req.body;
+
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    res.status(400);
+    throw new Error("Invalid user ID");
+  }
+
+  const result = await userService.editUser(id, updateData);
+
+  res.status(200).json({
+    success: true,
+    ...result,
+  });
+});

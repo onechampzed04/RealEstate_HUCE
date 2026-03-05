@@ -5,9 +5,14 @@ import { useAdminAuth } from "../../context/AdminAuthContext";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import ActionMenu from "../../components/admin/ActionMenu";
+import ViewUserModal, { UserInfo } from "../../components/admin/ViewUserModal";
+import EditUserModal from "../../components/admin/EditUserModal";
 
 const Users: React.FC = () => {
   const { getAllUsers, softDeleteUser, restoreUser } = useAdminAuth();
+  const [viewUser, setViewUser] = useState<UserInfo | null>(null);
+  const [editUser, setEditUser] = useState<UserInfo | null>(null);
+  const [viewPackage, setViewPackage] = useState<any>(null);
   type SortField = "name" | "isActive" | "createdAt" | "package";
   type SortOrder = "asc" | "desc";
 
@@ -28,6 +33,18 @@ const Users: React.FC = () => {
     limit: 8,
   });
   
+  const handleSave = async (
+    userId: string,
+    data: { name: string; email: string; phone: string }
+  ) => {
+    // TODO: Thay bằng API call thực tế
+    // await userService.editUser(userId, data);
+    console.log("Save user:", userId, data);
+
+    // Cập nhật local list sau khi lưu thành công (tuỳ chọn)
+    // setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data } : u));
+  };
+
   const fetchUsers = async () => {
     try {
       const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
@@ -326,6 +343,11 @@ const Users: React.FC = () => {
                     user={user}
                     onDelete={handleSoftDelete}
                     onRestore={handleRestore}
+                    handleOpenView={(u) => {
+                      setViewUser(u);
+                      setViewPackage(u.currentPackage ?? null);  // ← lưu package kèm theo
+                    }}
+                    handleOpenEdit={(u) => setEditUser(u)}
                   />
                 </td>
               </tr>
@@ -333,6 +355,18 @@ const Users: React.FC = () => {
           </tbody>
         </table>
       </div>
+        <ViewUserModal
+          isOpen={!!viewUser}
+          user={viewUser}
+          userPackage={viewPackage}
+          onClose={() => { setViewUser(null); setViewPackage(null); }}
+        />
+        <EditUserModal
+          isOpen={!!editUser}
+          user={editUser}
+          onSave={handleSave}
+          onClose={() => setEditUser(null)}
+        />
       <div className="p-6 border-t border-slate-100 flex justify-between items-center text-sm text-slate-500">
         <span>
           Hiển thị{" "}
