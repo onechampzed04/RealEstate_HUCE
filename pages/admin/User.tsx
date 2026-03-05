@@ -9,7 +9,7 @@ import ViewUserModal, { UserInfo } from "../../components/admin/ViewUserModal";
 import EditUserModal from "../../components/admin/EditUserModal";
 
 const Users: React.FC = () => {
-  const { getAllUsers, softDeleteUser, restoreUser } = useAdminAuth();
+  const { getAllUsers, softDeleteUser, restoreUser, editUser: editUserApi } = useAdminAuth();
   const [viewUser, setViewUser] = useState<UserInfo | null>(null);
   const [editUser, setEditUser] = useState<UserInfo | null>(null);
   const [viewPackage, setViewPackage] = useState<any>(null);
@@ -34,16 +34,21 @@ const Users: React.FC = () => {
   });
   
   const handleSave = async (
-    userId: string,
-    data: { name: string; email: string; phone: string }
-  ) => {
-    // TODO: Thay bằng API call thực tế
-    // await userService.editUser(userId, data);
-    console.log("Save user:", userId, data);
+  userId: string,
+  data: { name: string; email: string; phone: string }
+) => {
+  try {
+    await editUserApi(userId, data);  // ← gọi API qua context
 
-    // Cập nhật local list sau khi lưu thành công (tuỳ chọn)
-    // setUsers(prev => prev.map(u => u._id === userId ? { ...u, ...data } : u));
-  };
+    // Cập nhật local list không cần refetch
+    setUsers((prev) =>
+      prev.map((u) => (u._id === userId ? { ...u, ...data } : u))
+    );
+  } catch (error) {
+    console.error("Lỗi khi cập nhật user:", error);
+    throw error; // ← quan trọng: throw để EditUserModal bắt được lỗi và hiện thông báo
+  }
+};
 
   const fetchUsers = async () => {
     try {
