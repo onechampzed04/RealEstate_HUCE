@@ -11,6 +11,7 @@ import {
 const router = express.Router();
 const controller = new PackageController();
 router.get("/", controller.getAll);
+router.get("/admin", authenticate, isAdmin, controller.getAllForAdmin);
 router.post(
   "/",
   authenticate,

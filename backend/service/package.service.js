@@ -12,6 +12,11 @@ export default class PackageService {
     return packages;
   }
 
+  async getAllPackages() {
+    const packages = await Package.find().sort({ priority: -1, price: 1 });
+    return packages;
+  }
+
   async createPackage(data) {
     console.log("Creating package with data:", data);
     const {
