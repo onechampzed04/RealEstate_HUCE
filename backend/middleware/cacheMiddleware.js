@@ -18,6 +18,7 @@ const defaultKeyGenerator = (req) => {
   // Sort query params to avoid duplicate keys
   const queryKeys = Object.keys(req.query).sort();
 
+  // GIỮ LOGIC XỬ LÝ OBJECT CỦA BẠN (HEAD)
   const normalizedQuery = queryKeys.map((key) => {
     const value = req.query[key];
 
@@ -41,10 +42,6 @@ const defaultKeyGenerator = (req) => {
 
 /**
  * Cache middleware factory
- * @param {Object} options
- * @param {number} options.ttl - Time to live (seconds)
- * @param {Function} options.keyGenerator - Custom key generator
- * @param {boolean} options.debug - Log cache hit/miss
  */
 export const cacheMiddleware = ({
   ttl = 300,
@@ -57,14 +54,16 @@ export const cacheMiddleware = ({
     }
 
     const key = keyGenerator(req);
-
     const cachedResponse = cache.get(key);
 
     if (cachedResponse) {
+      // GIỮ LOG CỦA NHÁNH THAN ĐỂ DỄ THEO DÕI
+      console.log("cache hit"); 
       if (debug) console.log(`[CACHE HIT] ${key}`);
       return res.json(cachedResponse);
     }
-
+    
+    console.log("cache miss");
     if (debug) console.log(`[CACHE MISS] ${key}`);
 
     const originalJson = res.json.bind(res);
@@ -79,8 +78,7 @@ export const cacheMiddleware = ({
 };
 
 /**
- * Clear cache by prefix (safer than includes)
- * @param {string} prefix
+ * Clear cache by prefix
  */
 export const clearCacheByPrefix = (prefix) => {
   const keys = cache.keys().filter((key) => key.startsWith(prefix));

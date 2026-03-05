@@ -21,17 +21,28 @@ const ProfilePage: React.FC = () => {
     const [userAvatar, setUserAvatar] = useState<string | undefined>(undefined);
 
     useEffect(() => {
-        setUserAvatar(user?.avatar?.url || undefined);
+        if (user?.avatar) {
+            if (typeof user.avatar === 'object' && 'url' in user.avatar) {
+                setUserAvatar(user.avatar.url || undefined);
+            } else if (typeof user.avatar === 'string') {
+                setUserAvatar(user.avatar);
+            }
+        }
     }, [user]);
 
     const handleAvatarUploadSuccess = (avatarUrl: string) => {
         setUserAvatar(avatarUrl);
         if (user) {
+            // Lấy publicId cũ một cách an toàn
+            const oldPublicId = (typeof user.avatar === 'object' && user.avatar !== null) 
+                ? (user.avatar as any).publicId 
+                : null;
+
             updateUser({ 
                 ...user, 
                 avatar: {
                     url: avatarUrl,
-                    publicId: user.avatar?.publicId || null,
+                    publicId: oldPublicId,
                 }
             });
         }

@@ -7,7 +7,6 @@ import bcrypt from "bcrypt";
 class AuthService {
   async register({ name, email, phone, password }) {
     const lowerEmail = email.toLowerCase();
-
     // Kiểm tra email đã tồn tại
     const existingEmail = await User.findOne({ email: lowerEmail });
     if (existingEmail) throw new Error("Email đã được sử dụng");
@@ -41,7 +40,6 @@ class AuthService {
 
   async verifyRegistrationOtp({ email, otp }) {
     const lowerEmail = email.toLowerCase();
-
     // Lấy pending registration
     const pending = otpStore.getPendingRegistration(lowerEmail);
     if (!pending) {
@@ -101,7 +99,6 @@ class AuthService {
 
   async login({ email, password }) {
     const lowerEmail = email.toLowerCase();
-
     const user = await User.findOne({ email: lowerEmail }).select("+password");
     if (!user) throw new Error("Email hoặc mật khẩu không hợp lệ");
 

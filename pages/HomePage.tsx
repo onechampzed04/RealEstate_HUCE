@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchFeaturedProperties } from '../services/api';
@@ -44,18 +43,25 @@ const HomePage: React.FC = () => {
           <p className="mt-6 max-w-lg mx-auto text-xl text-indigo-100">
             Khám phá hàng ngàn bất động sản và sử dụng công cụ định giá thông minh của chúng tôi.
           </p>
+          
+          {/* Kết hợp cả 3 nút từ 2 nhánh */}
           <div className="mt-10 max-w-sm mx-auto sm:max-w-none sm:flex sm:justify-center space-y-4 sm:space-y-0 sm:space-x-4">
             <Link to="/listings">
               <Button size="lg" variant="primary">Xem Bất Động Sản</Button>
             </Link>
+            <Link to="/submit-property">
+              <Button size="lg" variant="secondary">Đăng Tin Miễn Phí</Button>
+            </Link>
             <Link to="/valuation">
-              <Button size="lg" variant="secondary">Thử Định Giá</Button>
+              <Button size="lg" variant="outline" className="bg-white/10 text-white border-white hover:bg-white hover:text-gray-900">
+                Thử Định Giá
+              </Button>
             </Link>
           </div>
         </div>
       </div>
 
-      {/* Featured Properties */}
+      {/* Featured Properties Section */}
       <div className="bg-gray-50 py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
@@ -64,12 +70,14 @@ const HomePage: React.FC = () => {
               Những lựa chọn tốt nhất được tuyển chọn dành riêng cho bạn.
             </p>
           </div>
+          
           {loading ? (
             <Spinner />
           ) : (
             <div className="mt-12 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
               {properties.map((property) => (
-                <PropertyCard key={property.id} property={property} />
+                // Ưu tiên dùng _id từ MongoDB để làm key
+                <PropertyCard key={property._id || property.id} property={property} />
               ))}
             </div>
           )}

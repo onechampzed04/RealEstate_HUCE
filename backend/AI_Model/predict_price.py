@@ -81,6 +81,7 @@ MARKET_GROWTH_FACTOR = current_factor
 try:
     MODEL_PATH = r"E:\test_cacnhanh\RealEstate_HUCE\backend\AI_Model\catboost_model.cbm"
     PICKLE_PATH = r"E:\test_cacnhanh\RealEstate_HUCE\backend\AI_Model\preprocess_globals.pkl"
+
     model = CatBoostRegressor()
     model.load_model(MODEL_PATH)
     with open(PICKLE_PATH, "rb") as f:

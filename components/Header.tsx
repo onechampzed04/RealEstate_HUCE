@@ -150,7 +150,13 @@ const Header: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <AvatarPlaceholder
                         name={user.name}
-                        avatarUrl={user.avatar?.url || undefined}
+                        avatarUrl={
+                          typeof user.avatar === 'object' && user.avatar !== null
+                            ? user.avatar.url || undefined
+                            : typeof user.avatar === 'string'
+                              ? user.avatar
+                              : undefined
+                        }
                         size="sm"
                       />
                       <span className="text-gray-700">Chào, {user.name}</span>

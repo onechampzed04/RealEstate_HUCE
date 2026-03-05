@@ -1,5 +1,5 @@
-
 import type { Property } from '../types';
+import axios from 'axios';
 
 const BASE_URL = 'http://localhost:5001/api';
 
@@ -12,29 +12,49 @@ async function handleResponse(response: Response) {
 }
 
 export const fetchProperties = async (
-  keyword?: string,
-  type?: string,
-  price?: string
-): Promise<Property[]> => {
+  keyword: string, 
+  propertyType: string, 
+  priceRange: string, 
+  page: number = 1,
+  city?: string,
+  type?: string
+) => {
+  // Phân tích priceRange thành minPrice và maxPrice
+  let minPrice = undefined;
+  let maxPrice = undefined;
+  
+  if (priceRange === 'under5') {
+    maxPrice = 5000000000;
+  } else if (priceRange === '5to10') {
+    minPrice = 5000000000;
+    maxPrice = 10000000000;
+  } else if (priceRange === 'above10') {
+    minPrice = 10000000000;
+  }
 
-  const params = new URLSearchParams();
-
-  if (keyword) params.append("keyword", keyword);
-  if (type) params.append("type", type);
-  if (price) params.append("price", price);
-
-  const response = await fetch(`${BASE_URL}/listings?${params.toString()}`);
-  return handleResponse(response);
+  const response = await axios.get(`${BASE_URL}/listings`, {
+    params: {
+      keyword: keyword || undefined,
+      propertyType: propertyType ? propertyType.toUpperCase() : undefined,
+      minPrice,
+      maxPrice,
+      city: city || undefined,
+      type: type || undefined,
+      limit: 10,
+      page
+    }
+  });
+  return response.data;
 };
 
-
 export const fetchFeaturedProperties = async (): Promise<Property[]> => {
-    const response = await fetch(`${BASE_URL}/properties/featured`);
-    return handleResponse(response);
+    const response = await fetch(`${BASE_URL}/listings`);
+    const data = await handleResponse(response);
+    return data.listings.slice(0, 6) || [];
 };
 
 export const fetchPropertyById = async (id: string): Promise<Property | undefined> => {
-    const response = await fetch(`${BASE_URL}/properties/${id}`);
+    const response = await fetch(`${BASE_URL}/listings/${id}`);
     return handleResponse(response);
 };
 
@@ -256,3 +276,89 @@ export const checkOrderStatus = async (orderCode: number, token: string): Promis
     });
     return handleResponse(response);
 };
+
+// =============================================
+// API quản lý bài đăng bất động sản (Listing)
+// =============================================
+
+export interface ListingFormData {
+    title: string;
+    description: string;
+    type: 'SALE' | 'RENT';
+    propertyType: 'APARTMENT' | 'HOUSE' | 'LAND' | 'VILLA';
+    price: number;
+    area: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    address: string;
+    city: string;
+    district?: string;
+    ward?: string;
+    images?: string[];
+}
+
+export interface Listing {
+    _id: string;
+    title: string;
+    description: string;
+    type: 'SALE' | 'RENT';
+    propertyType: 'APARTMENT' | 'HOUSE' | 'LAND' | 'VILLA';
+    price: number;
+    area: number;
+    bedrooms?: number;
+    bathrooms?: number;
+    location: {
+        address?: string;
+        city?: string;
+        district?: string;
+        ward?: string;
+    };
+    images: string[];
+    status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
+    createdAt: string;
+    updatedAt: string;
+}
+
+/** Lấy danh sách bài đăng của người dùng hiện tại */
+export const fetchMyListings = async (token: string): Promise<{ listings: Listing[]; pagination: any }> => {
+    const response = await fetch(`${BASE_URL}/listings/my-listings`, {
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return handleResponse(response);
+};
+
+/** Tạo bài đăng mới */
+export const createListing = async (data: ListingFormData, token: string): Promise<Listing> => {
+    const response = await fetch(`${BASE_URL}/listings`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+};
+
+/** Cập nhật bài đăng */
+export const updateListing = async (id: string, data: Partial<ListingFormData>, token: string): Promise<Listing> => {
+    const response = await fetch(`${BASE_URL}/listings/${id}`, {
+        method: 'PUT',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(data),
+    });
+    return handleResponse(response);
+};
+
+/** Xóa bài đăng */
+export const deleteListing = async (id: string, token: string): Promise<void> => {
+    const response = await fetch(`${BASE_URL}/listings/${id}`, {
+        method: 'DELETE',
+        headers: { 'Authorization': `Bearer ${token}` },
+    });
+    return handleResponse(response);
+};
+
