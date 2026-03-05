@@ -101,21 +101,21 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const getAllUsers = useCallback(async (params?: GetUsersParams) => {
-    return adminApi.get("/admin/users", { params });
+    return adminApi.get("/users", { params });
   }, []);
 
   const softDeleteUser = useCallback(async (userId: string) => {
-    return adminApi.patch(`/admin/users/${userId}/soft-delete`);
+    return adminApi.patch(`/users/${userId}/soft-delete`);
   }, []);
 
   const restoreUser = useCallback(async (userId: string) => {
-    return adminApi.patch(`/admin/users/${userId}/restore`);
+    return adminApi.patch(`/users/${userId}/restore`);
   }, []);
   const viewUserDetails = useCallback(async (userId: string) => {
-    return adminApi.get(`/admin/users/${userId}`);
+    return adminApi.get(`/users/${userId}`);
   }, []);
   const editUser = useCallback(async (userId: string, data: any) => {
-    return adminApi.put(`/admin/users/${userId}/edit`, data);
+    return adminApi.put(`/users/${userId}/edit`, data);
   }, []);
   return (
     <AdminAuthContext.Provider value={{ admin, token, loading, login, logout, getAllUsers, softDeleteUser, restoreUser, viewUserDetails, editUser }}>

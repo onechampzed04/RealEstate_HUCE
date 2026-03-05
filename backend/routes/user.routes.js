@@ -19,6 +19,6 @@ router.get(
 router.patch("/users/:id/soft-delete", authenticate, isAdmin, userController.softDeleteUser);
 router.patch("/users/:id/restore", authenticate, isAdmin, userController.restoreUser);
 router.get("/users/:id", authenticate, isAdmin, userController.viewUserDetails);
-router.put("/users/:id", authenticate, isAdmin, userController.editUser);
+router.put("/users/:id/edit", authenticate, isAdmin, userController.editUser);
 
 export default router;
