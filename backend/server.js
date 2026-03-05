@@ -53,10 +53,8 @@ app.use("/api/listings", listingRoutes);
 app.use("/api/auth", authRoutes);
 
 app.use("/api/payments", paymentRoutes);
-app.use("/api/users", authRoutes);
 app.use("/api", user);
 app.use("/api/user-packages", userPackageRoutes);
-app.use("/api/admin", user);
 
 app.use("/api/upload", uploadRoutes);
 

@@ -1,8 +1,8 @@
-import { clearAllCache, clearCacheKey } from "../middleware/cacheMiddleware.js";
+import { clearAllCache, clearCacheByPrefix } from "../middleware/cacheMiddleware.js";
 import User from "../models/UserModel.js";
 class UserService {
   constructor() {
-    clearCacheKey("users");
+    clearCacheByPrefix("users");
     // Khởi tạo các thuộc tính hoặc kết nối cơ sở dữ liệu nếu cần
   }
 
@@ -172,24 +172,22 @@ class UserService {
 
   async softDeleteUser(userId) {
     const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
     user.isActive = false;
     await user.save();
-    clearCacheKey("users");
+    clearCacheByPrefix("/api/users"); // ← dùng đúng prefix từ key thực tế
     return { message: "User soft deleted successfully" };
   }
+
   async restoreUser(userId) {
     const user = await User.findById(userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
+    if (!user) throw new Error("User not found");
     user.isActive = true;
     await user.save();
-    clearCacheKey("users");
+    clearCacheByPrefix("/api/users"); // ← tương tự
     return { message: "User restored successfully" };
   }
+
   async viewUserDetails(userId) {
     const user = await User.findById(userId)
       .select("-password -__v")
@@ -229,7 +227,7 @@ class UserService {
       throw new Error("User not found");
     }
 
-    clearCacheKey("users");
+    clearCacheByPrefix("/api/users");
 
     return {
       message: "User updated successfully",

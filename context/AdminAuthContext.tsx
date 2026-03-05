@@ -56,7 +56,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       try {
-        const res = await adminApi.get("/users/profile");
+        const res = await adminApi.get("/auth/profile");
         console.log("Admin profile response:", res.data); // ✅ Debug log
         setAdmin(res.data.data);
       } catch (error) {
@@ -70,7 +70,7 @@ export const AdminAuthProvider = ({ children }: { children: ReactNode }) => {
   }, [token]);
 
   const login = async (email: string, password: string) => {
-    const res = await adminApi.post("/users/login", {
+    const res = await adminApi.post("/auth/login", {
       email,
       password,
     });

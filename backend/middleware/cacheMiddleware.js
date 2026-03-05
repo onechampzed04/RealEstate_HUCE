@@ -52,13 +52,16 @@ export const cacheMiddleware = ({
   debug = false,
 } = {}) => {
   return (req, res, next) => {
+    console.log("🔵 cacheMiddleware hit:", req.method, req.originalUrl);
     if (req.method !== "GET") {
       return next();
     }
 
     const key = keyGenerator(req);
+    console.log("🔑 Cache key:", key); // ← thêm dòng này
 
     const cachedResponse = cache.get(key);
+    console.log("📦 Cache value:", cachedResponse ? "HIT" : "MISS");
 
     if (cachedResponse) {
       if (debug) console.log(`[CACHE HIT] ${key}`);
@@ -70,6 +73,7 @@ export const cacheMiddleware = ({
     const originalJson = res.json.bind(res);
 
     res.json = (body) => {
+      console.log("💾 Saving to cache key:", key);
       cache.set(key, body, ttl);
       return originalJson(body);
     };

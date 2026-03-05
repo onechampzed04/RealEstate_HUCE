@@ -16,9 +16,9 @@ router.get(
   cacheMiddleware({ ttl: 300 }),
   userController.getAllUsers,
 );
-router.patch("/users/:id/soft-delete", authenticate, isAdmin, userController.softDeleteUser);
-router.patch("/users/:id/restore", authenticate, isAdmin, userController.restoreUser);
-router.get("/users/:id", authenticate, isAdmin, userController.viewUserDetails);
-router.put("/users/:id/edit", authenticate, isAdmin, userController.editUser);
+router.patch("/users/:id/soft-delete", authenticate, isAdmin, cacheMiddleware({ ttl: 300, debug: true }), userController.softDeleteUser);
+router.patch("/users/:id/restore", authenticate, isAdmin, cacheMiddleware({ ttl: 300, debug: true }), userController.restoreUser);
+router.get("/users/:id", authenticate, isAdmin, cacheMiddleware({ ttl: 300, debug: true }), userController.viewUserDetails);
+router.put("/users/:id/edit", authenticate, isAdmin, cacheMiddleware({ ttl: 300, debug: true }), userController.editUser);
 
 export default router;

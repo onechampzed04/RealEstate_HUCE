@@ -1,4 +1,4 @@
-import { Download, UserPlus } from "lucide-react";
+import { Download } from "lucide-react";
 import { cn } from "../../lib/utils";
 import React, { useState } from "react";
 import { useAdminAuth } from "../../context/AdminAuthContext";
@@ -8,12 +8,7 @@ import ActionMenu from "../../components/admin/ActionMenu";
 import ViewUserModal, { UserInfo } from "../../components/admin/ViewUserModal";
 import EditUserModal from "../../components/admin/EditUserModal";
 
-const Users: React.FC = () => {
-  const { getAllUsers, softDeleteUser, restoreUser, editUser: editUserApi } = useAdminAuth();
-  const [viewUser, setViewUser] = useState<UserInfo | null>(null);
-  const [editUser, setEditUser] = useState<UserInfo | null>(null);
-  const [viewPackage, setViewPackage] = useState<any>(null);
-  type SortField = "name" | "isActive" | "createdAt" | "package";
+type SortField = "name" | "isActive" | "createdAt" | "package";
   type SortOrder = "asc" | "desc";
 
   interface SortItem {
@@ -21,6 +16,12 @@ const Users: React.FC = () => {
     order: SortOrder;
   }
 
+const Users: React.FC = () => {
+  const { getAllUsers, softDeleteUser, restoreUser, editUser: editUserApi } = useAdminAuth();
+  const [viewUser, setViewUser] = useState<UserInfo | null>(null);
+  const [editUser, setEditUser] = useState<UserInfo | null>(null);
+  const [viewPackage, setViewPackage] = useState<any>(null);
+  const [refreshKey, setRefreshKey] = useState(0);
   const [sorts, setSorts] = useState<SortItem[]>([
     { field: "createdAt", order: "desc" }
   ]);
@@ -39,47 +40,32 @@ const Users: React.FC = () => {
 ) => {
   try {
     await editUserApi(userId, data);  // ← gọi API qua context
-
-    // Cập nhật local list không cần refetch
-    setUsers((prev) =>
-      prev.map((u) => (u._id === userId ? { ...u, ...data } : u))
-    );
+    setRefreshKey(prev => prev + 1)
   } catch (error) {
     console.error("Lỗi khi cập nhật user:", error);
     throw error; // ← quan trọng: throw để EditUserModal bắt được lỗi và hiện thông báo
   }
 };
 
-  const fetchUsers = async () => {
+React.useEffect(() => {
+  console.log("🔄 useEffect triggered, refreshKey:", refreshKey);
+  
+  const run = async () => {
+    const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
+      (acc, item) => { acc[item.field] = item.order; return acc; },
+      {} as Record<SortField, SortOrder>
+    );
     try {
-      const sortQuery: Record<SortField, SortOrder> = sorts.reduce(
-        (acc, item) => {
-          acc[item.field] = item.order;
-          return acc;
-        },
-        {} as Record<SortField, SortOrder>
-      );
-
-      const res = await getAllUsers({
-        page: pagination.page,
-        search,
-        sort: sortQuery
-      });
-
-      if (res?.data?.users) {
-        setUsers(res.data.users);
-      }
-
-      if (res?.data?.pagination) {
-        setPagination(res.data.pagination);
-      }
+      const res = await getAllUsers({ page: pagination.page, search, sort: sortQuery });
+      if (res?.data?.users) setUsers(res.data.users);
+      if (res?.data?.pagination) setPagination(res.data.pagination);
     } catch (error) {
       console.error(error);
     }
   };
-  React.useEffect(() => {
-    fetchUsers();
-  }, [pagination.page, search, sorts]);
+
+  run();
+}, [pagination.page, search, sorts, refreshKey]);
 
   const SINGLE_SORT_FIELDS: SortField[] = ["name", "createdAt"];
 
@@ -216,28 +202,26 @@ const Users: React.FC = () => {
   const handleSoftDelete = async (id: string) => {
     console.log("Soft delete clicked", id);
     try {
-      await softDeleteUser(id);
-      setUsers((prev) =>
-        prev.map((u) =>
-          u._id === id ? { ...u, isActive: false } : u
-        )
-      );
-    } catch (error) {
-      console.error(error);
+      const res = await softDeleteUser(id);
+      console.log("✅ Response:", res.data);
+      setRefreshKey(prev => prev + 1)
+    } catch (error: any) {
+      console.error("❌ Status:", error?.response?.status);
+      console.error("❌ URL called:", error?.config?.url);
+      console.error("❌ Message:", error?.response?.data);
     }
   };
 
   const handleRestore = async (id: string) => {
     console.log("Restore clicked", id);
     try {
-      await restoreUser(id);
-      setUsers((prev) =>
-        prev.map((u) =>
-          u._id === id ? { ...u, isActive: true } : u
-        )
-      );
-    } catch (error) {
-      console.error(error);
+      const res = await restoreUser(id);
+      console.log("✅ Response:", res.data);
+      setRefreshKey(prev => prev + 1)
+    } catch (error: any) {
+      console.error("❌ Status:", error?.response?.status);
+      console.error("❌ URL called:", error?.config?.url);
+      console.error("❌ Message:", error?.response?.data);
     }
   };
 
@@ -257,9 +241,6 @@ const Users: React.FC = () => {
             className="px-3 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
           />
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-xl text-sm font-medium hover:bg-indigo-700 shadow-lg shadow-indigo-200">
-          <UserPlus size={16} /> Thêm người dùng
-        </button>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">

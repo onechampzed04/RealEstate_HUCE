@@ -6,6 +6,7 @@ const userService = new UserService();
 
 // 📌 GET /api/users
 export const getAllUsers = asyncHandler(async (req, res) => {
+  console.log("✅ getAllUsers controller hit");
   const result = await userService.getUserAll(req.query);
 
   res.status(200).json({
@@ -16,6 +17,7 @@ export const getAllUsers = asyncHandler(async (req, res) => {
 
 // 🗑 DELETE /api/users/:id (soft delete)
 export const softDeleteUser = asyncHandler(async (req, res) => {
+  console.log("✅ Hit softDeleteUser, id:", req.params.id);
   const { id } = req.params;
 
   if (!mongoose.Types.ObjectId.isValid(id)) {
