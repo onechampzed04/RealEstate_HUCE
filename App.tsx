@@ -18,7 +18,7 @@ import RegisterPage from "./pages/RegisterPage";
 import ProfilePage from "./pages/ProfilePage";
 import SubmitPropertyPage from "./pages/SubmitPropertyPage";
 import NotFoundPage from "./pages/NotFoundPage";
-
+import EditListingPage from "./pages/EditListingPage";
 // Admin Pages
 import AdminLoginPage from "./pages/admin/AdminLoginPage";
 import Dashboard from "./pages/admin/Dashboard";
@@ -40,7 +40,7 @@ function App() {
               <Route path="valuation" element={<ValuationPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<RegisterPage />} />
-
+              <Route path="/edit-listing/:id" element={<EditListingPage />} />
               {/* Protected User Routes */}
               <Route
                 path="profile"

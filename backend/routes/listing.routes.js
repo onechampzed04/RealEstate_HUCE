@@ -38,12 +38,7 @@ router.delete("/:id", authenticate, listingController.deleteListing);
 // PUBLIC ROUTE CHI TIẾT
 // ==========================================
 
-router.get(
-  "/:id",
-  cacheMiddleware({ ttl: 300 }),
-  listingController.getListingById
-);
-
+router.get("/:id", listingController.getListingById);
 // ==========================================
 // AI valuation
 // ==========================================

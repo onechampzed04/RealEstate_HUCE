@@ -10,7 +10,7 @@ import AvatarPlaceholder from '../components/AvatarPlaceholder';
 import AvatarUploadModal from '../components/AvatarUploadModal';
 
 import { fetchMyListings, deleteListing, Listing } from '../services/api';
-
+import { useNavigate } from "react-router-dom";
 const ProfilePage: React.FC = () => {
 
     const { user, token, updateUser } = useAuth();
@@ -25,7 +25,7 @@ const ProfilePage: React.FC = () => {
 
     const [listings, setListings] = useState<Listing[]>([]);
     const [loadingListings, setLoadingListings] = useState(true);
-
+    const navigate = useNavigate();
     useEffect(() => {
         if (user?.avatar) {
             if (typeof user.avatar === 'object' && 'url' in user.avatar) {
@@ -241,7 +241,10 @@ const ProfilePage: React.FC = () => {
 
                                 <div className="flex gap-3 mt-4">
 
-                                    <button className="flex items-center gap-1 text-blue-500">
+                                    <button
+                                        onClick={() => navigate(`/edit-listing/${listing._id}`)}
+                                        className="flex items-center gap-1 text-blue-500"
+                                    >
                                         <FaEdit />
                                         Sửa
                                     </button>

@@ -2,10 +2,10 @@ import { clearAllCache, clearCacheKey } from "../middleware/cacheMiddleware.js";
 import ListingModel from "../models/ListingModel.js";
 
 export default class ListingService {
+  
   invalidateCache() {
-    clearCacheKey("listings");
-  }
-
+  clearAllCache();
+}
   /**
    * Lấy danh sách tin đăng (Công khai - Đã duyệt)
    * Kết hợp bộ lọc nâng cao từ HEAD và Populate từ nhánh Than
