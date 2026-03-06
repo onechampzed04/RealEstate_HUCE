@@ -83,7 +83,10 @@ const PYTHON_SCRIPT_PATH = join(__dirname, '..', 'AI_Model', 'predict_price.py')
 
 function runPythonScript(inputData) {
   return new Promise((resolve, reject) => {
-    const python = spawn('C:\\Users\\NCT\\AppData\\Local\\Microsoft\\WindowsApps\\python.exe', [PYTHON_SCRIPT_PATH]);    
+    const python = spawn(
+      "C:\\Users\\NCT\\anaconda3\\python.exe",
+      [PYTHON_SCRIPT_PATH]
+    ); 
     let output = '';
     let errorOutput = '';
 

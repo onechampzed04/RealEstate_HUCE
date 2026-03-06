@@ -1,10 +1,12 @@
 // controllers/PackageController.js
+import UserPackageService from "../service/userPackage.service.js";
 import PackageService from "../service/package.service.js";
 import asyncHandler from "express-async-handler";
 
 export default class PackageController {
   constructor() {
     this.packageService = new PackageService();
+    this.userPackageService = new UserPackageService();
   }
   getAll = asyncHandler(async (req, res) => {
     const packages = await this.packageService.getAllActivePackages();
@@ -69,13 +71,33 @@ export default class PackageController {
     });
   });
 
-  toggleStatus = asyncHandler(async (req, res) => {
+   // backend/controllers/PackageController.js
+toggleStatus = asyncHandler(async (req, res) => {
+    // 1. Cập nhật gói gốc trước
     const pkg = await this.packageService.toggleStatus(req.params.id);
+    
+    // 2. Kiểm tra xem pkg có tồn tại không
+    if (!pkg) {
+        return res.status(404).json({ success: false, message: "Gói không tồn tại" });
+    }
+
+    // 3. Thực hiện cascade (isLocking là true nếu pkg.isActive là false)
+    const isLocking = !pkg.isActive;
+    
+    try {
+        const updateResult = await this.userPackageService.toggleAllByPackageId(req.params.id, isLocking);
+        console.log(`Updated ${updateResult.modifiedCount} user packages to ${isLocking ? 'PAUSED' : 'ACTIVE'}`);
+    } catch (err) {
+        console.error("Cascade update failed:", err);
+        // Ngay cả khi lỗi cascade, ta vẫn báo pkg đã đổi để FE đồng bộ, 
+        // hoặc throw lỗi để Admin biết
+    }
 
     res.json({
-      success: true,
-      message: "Package status toggled successfully",
-      data: pkg,
+        success: true,
+        message: pkg.isActive ? "Đã mở khóa gói cước" : "Đã khóa gói cước và tạm dừng người dùng liên quan",
+        data: pkg,
     });
-  });
+});
+  
 }

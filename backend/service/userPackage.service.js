@@ -111,6 +111,43 @@ export default class UserPackageService {
     if (!updatedPackage) {
       throw new Error("UserPackage not found");
     }
+   
     return updatedPackage;
   }
+
+   /**
+   * Cập nhật trạng thái hàng loạt khi Admin Khóa/Mở gói cước gốc
+   * @param {string} packageId - ID của gói cước gốc (Package)
+   * @param {boolean} isLocking - true nếu là khóa gói, false nếu là mở gói
+   */
+  // backend/service/userPackage.service.js
+async toggleAllByPackageId(packageId, isLocking) {
+    const now = new Date();
+    
+    // Logic: Nếu Admin Khóa gói (isLocking = true) 
+    // -> Tìm tất cả thằng đang ACTIVE và còn hạn -> chuyển thành PAUSED
+    if (isLocking) {
+        return await UserPackage.updateMany(
+            {
+                package: packageId,
+                status: "ACTIVE",
+                endDate: { $gt: now }
+            },
+            { $set: { status: "PAUSED" } }
+        );
+    } 
+    // Nếu Admin Mở gói (isLocking = false)
+    // -> Tìm tất cả thằng đang bị PAUSED (do bị khóa trước đó) -> chuyển lại thành ACTIVE
+    else {
+        return await UserPackage.updateMany(
+            {
+                package: packageId,
+                status: "PAUSED",
+                endDate: { $gt: now }
+            },
+            { $set: { status: "ACTIVE" } }
+        );
+    }
+}
+  
 }

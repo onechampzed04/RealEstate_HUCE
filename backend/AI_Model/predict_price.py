@@ -79,9 +79,9 @@ MARKET_GROWTH_FACTOR = current_factor
 # SECTION 1: TẢI MODEL VÀ CÁC BIẾN TIỀN XỬ LÝ (NÂNG CAO)
 # =============================================================================pip install catboost
 try:
-    MODEL_PATH = r"E:\test_cacnhanh\RealEstate_HUCE\backend\AI_Model\catboost_model.cbm"
-    PICKLE_PATH = r"E:\test_cacnhanh\RealEstate_HUCE\backend\AI_Model\preprocess_globals.pkl"
-
+    BASE_DIR = os.path.dirname(__file__)
+    MODEL_PATH = os.path.join(BASE_DIR, 'catboost_model.cbm')
+    PICKLE_PATH = os.path.join(BASE_DIR, 'preprocess_globals.pkl')
     model = CatBoostRegressor()
     model.load_model(MODEL_PATH)
     with open(PICKLE_PATH, "rb") as f:
@@ -177,48 +177,65 @@ def main():
         df = pd.DataFrame([input_data])
         df.columns = df.columns.str.strip().str.replace(' ', '_').str.lower()
         
-        # 1. Áp dụng "bộ dịch"
+        # 1. Áp dụng "bộ dịch" và trích xuất địa chỉ
         if 'address' in df.columns:
             df['city'], df['district'], df['sub_district'] = zip(*df['address'].apply(translate_and_extract_location))
             df = df.drop(columns=['address'])
 
-        # 2. Impute và fillna
+        # 2. Xử lý và điền giá trị thiếu cho các cột số
+        # <<< FIX: Cần đảm bảo cột 'area' tồn tại và là số trước khi tính log >>>
         for col in numerical_cols:
             df[col] = pd.to_numeric(df.get(col, np.nan), errors='coerce')
             if pd.isna(df.at[0, col]):
                 district_name = df.at[0, 'district']
-                df.at[0, col] = district_medians.get(district_name, overall_medians[col])
+                # Lấy giá trị trung vị từ globals_dict để điền
+                df.at[0, col] = district_medians[col].get(district_name, overall_medians[col])
+
+        # 3. Điền giá trị thiếu cho các cột categorical
         for col in cat_cols:
              if col in df.columns:
                 df[col] = df[col].fillna('Khác').astype(str)
 
-        # 3. Feature Engineering Nâng Cao
-        df['area_squared'] = df.get('area', 0).fillna(0)**2
+        # 4. Feature Engineering - Đồng bộ 100% với file training
+        # <<< FIX 1: TÍNH LOG_AREA >>>
+        # Đây là bước quan trọng nhất bị thiếu
+        df['log_area'] = np.log1p(df['area'])
+
+        # <<< FIX 2: TẠO CÁC FEATURE MỚI DỰA TRÊN LOG_AREA >>>
         district_name = df.at[0, 'district']
         df['district_price_modifier'] = district_log_price_avg.get(district_name, global_log_price_avg)
-        df['area_x_price_modifier'] = df.get('area', 0).fillna(0) * df['district_price_modifier']
+        
+        # Đổi tên và công thức tính cho khớp với file train
+        df['log_area_squared'] = df['log_area'] ** 2
+        df['log_area_x_price_modifier'] = df['log_area'] * df['district_price_modifier']
+        
         df['total_rooms'] = df.get('bedrooms', 0).fillna(0) + df.get('bathrooms', 0).fillna(0) + 1
-        df['rooms_per_area'] = df['total_rooms'] / (df.get('area', 1).fillna(1) + 1e-6)
+        df['rooms_per_log_area'] = df['total_rooms'] / (df['log_area'] + 1e-6)
+        
         df['is_good_direction'] = df.get('house_direction', '').isin(good_dirs).astype(int)
 
-        # 4. Chuẩn bị dữ liệu cuối cùng
+        # 5. Chuẩn bị dữ liệu cuối cùng và dự đoán
+        # Đảm bảo tất cả các feature mà model cần đều có mặt
         for col in features:
             if col not in df.columns:
-                df[col] = 0
+                df[col] = 0 # Hoặc một giá trị mặc định hợp lý khác
         X = df[features]
         
-        # Dự đoán
+        # Dự đoán giá trị log
         pred_log = model.predict(X)
+        # Chuyển đổi về giá trị thật
         pred_price = float(np.expm1(pred_log)[0])
         
         # Áp dụng hệ số tăng trưởng thị trường (đã tự cập nhật)
         final_price = pred_price * MARKET_GROWTH_FACTOR
 
-        print(json.dumps({"success": True, "predicted_price": final_price}))
+        print(json.dumps({"success": True, "predicted_price": final_price, "debug_info": {"growth_factor": MARKET_GROWTH_FACTOR, "last_update": load_growth_state()[0]}}))
         sys.stdout.flush()
 
     except Exception as e:
-        print(json.dumps({"success": False, "message": f"Lỗi trong kịch bản Python: {str(e)}"}))
+        import traceback
+        error_details = traceback.format_exc()
+        print(json.dumps({"success": False, "message": f"Lỗi trong kịch bản Python: {str(e)}", "details": error_details}))
         sys.exit(1)
 
 if __name__ == "__main__":

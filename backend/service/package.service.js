@@ -139,14 +139,6 @@ export default class PackageService {
 
     pkg.isActive = !pkg.isActive;
     await pkg.save();
-
-    this.invalidateCache();
-
-    emitRealtimeEvent("package:toggled", {
-      packageId: pkg._id,
-      isActive: pkg.isActive,
-    });
-
-    return pkg;
-  }
+    return pkg; // Phải return pkg để Controller nhận được giá trị mới
+}
 }
