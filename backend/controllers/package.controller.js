@@ -16,6 +16,15 @@ export default class PackageController {
     });
   });
   
+  getAllForAdmin = asyncHandler(async (req, res) => {
+    const packages = await this.packageService.getAllPackages();
+
+    res.json({
+      success: true,
+      message: "Lấy danh sách tất cả gói thành công.",
+      data: packages,
+    });
+  });
   create = asyncHandler(async (req, res) => {
     console.log("Received request to create package with body:", req.body);
     const pkg = await this.packageService.createPackage(req.body);

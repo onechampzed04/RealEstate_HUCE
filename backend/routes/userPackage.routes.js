@@ -13,4 +13,8 @@ router.get("/my-active", authenticate, controller.getMyActivePackage);
 // ROUTE ĐỂ MUA GÓI
 router.post("/purchase", authenticate, controller.purchasePackage);
 
+// ROUTE CẬP NHẬT / TẠM DỪNG GÓI
+router.patch("/:id/toggle", authenticate, controller.togglePackageStatus);
+router.put("/:id", authenticate, controller.updateUserPackage);
+
 export default router;

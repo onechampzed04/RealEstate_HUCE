@@ -6,8 +6,9 @@ const packageSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["BASIC", "PREMIUM"],
+      enum: ["FREE", "BASIC", "STANDARD", "PREMIUM", "VIP", "PRO", "ENTERPRISE"],
       required: true,
+      default: "STANDARD",
     },
 
     description: String,

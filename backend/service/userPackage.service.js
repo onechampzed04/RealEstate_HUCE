@@ -67,4 +67,50 @@ export default class UserPackageService {
       session.endSession();
     }
   }
+
+  async togglePackageStatus(id) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Invalid UserPackage ID");
+    }
+    const userPackage = await UserPackage.findById(id);
+    if (!userPackage) {
+      throw new Error("UserPackage not found");
+    }
+
+    if (userPackage.status === "ACTIVE") {
+      userPackage.status = "PAUSED";
+    } else if (userPackage.status === "PAUSED") {
+      userPackage.status = "ACTIVE";
+    } else {
+       throw new Error(`Cannot toggle package with status: ${userPackage.status}`);
+    }
+
+    await userPackage.save();
+    return userPackage;
+  }
+
+  async updateUserPackage(id, updateData) {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      throw new Error("Invalid UserPackage ID");
+    }
+    
+    const allowedFields = ["endDate", "remainingPosts", "status"];
+    const updatePayload = {};
+    for (const key of allowedFields) {
+      if (updateData[key] !== undefined) {
+        updatePayload[key] = updateData[key];
+      }
+    }
+
+    const updatedPackage = await UserPackage.findByIdAndUpdate(
+      id,
+      { $set: updatePayload },
+      { new: true, runValidators: true }
+    );
+
+    if (!updatedPackage) {
+      throw new Error("UserPackage not found");
+    }
+    return updatedPackage;
+  }
 }

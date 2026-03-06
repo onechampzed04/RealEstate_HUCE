@@ -32,4 +32,26 @@ export default class UserPackageController {
       data: userPackage,
     });
   });
+
+  togglePackageStatus = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userPackage = await this.userPackageService.togglePackageStatus(id);
+    
+    res.json({
+      success: true,
+      message: "Toggled user package status successfully",
+      data: userPackage,
+    });
+  });
+
+  updateUserPackage = asyncHandler(async (req, res) => {
+    const { id } = req.params;
+    const userPackage = await this.userPackageService.updateUserPackage(id, req.body);
+    
+    res.json({
+      success: true,
+      message: "Updated user package successfully",
+      data: userPackage,
+    });
+  });
 }

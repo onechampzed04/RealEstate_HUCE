@@ -25,7 +25,7 @@ const userPackageSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["ACTIVE", "EXPIRED", "CANCELLED"],
+      enum: ["ACTIVE", "EXPIRED", "CANCELLED", "PAUSED"],
       default: "ACTIVE",
     },
   },

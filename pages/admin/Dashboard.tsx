@@ -1,6 +1,5 @@
 import {
   Users,
-  CreditCard,
   BarChart3,
   ArrowUpRight,
   ArrowDownRight,
@@ -16,25 +15,9 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
-// --- Mock Data ---
-const revenueData = [
-  { name: "Jan", value: 4000 },
-  { name: "Feb", value: 3000 },
-  { name: "Mar", value: 2000 },
-  { name: "Apr", value: 2780 },
-  { name: "May", value: 1890 },
-  { name: "Jun", value: 2390 },
-  { name: "Jul", value: 3490 },
-];
+import { useState, useEffect } from "react";
+import adminApi from "../../lib/adminApi";
 
-const newUsers = [
-  { id: 1, name: "Nguyễn Văn A", email: "vana@example.com" },
-  { id: 2, name: "Trần Thị B", email: "thib@example.com" },
-  { id: 3, name: "Lê Văn C", email: "vanc@example.com" },
-  { id: 4, name: "Phạm Minh D", email: "minhd@example.com" },
-];
-
-// --- Stat Card Component ---
 function StatCard({ label, value, trend, icon: Icon, trendUp }: any) {
   return (
     <div className="bg-white p-6 rounded-2xl shadow-sm">
@@ -43,16 +26,18 @@ function StatCard({ label, value, trend, icon: Icon, trendUp }: any) {
           <Icon size={22} />
         </div>
 
-        <div
-          className={`flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-lg ${
-            trendUp
-              ? "text-emerald-600 bg-emerald-50"
-              : "text-rose-600 bg-rose-50"
-          }`}
-        >
-          {trendUp ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
-          {trend}
-        </div>
+        {trend && (
+          <div
+            className={`flex items-center gap-1 text-sm font-medium px-2 py-1 rounded-lg ${
+              trendUp
+                ? "text-emerald-600 bg-emerald-50"
+                : "text-rose-600 bg-rose-50"
+            }`}
+          >
+            {trendUp ? <ArrowUpRight size={14} /> : <ArrowDownRight size={14} />}
+            {trend}
+          </div>
+        )}
       </div>
 
       <h3 className="text-slate-500 text-sm">{label}</h3>
@@ -62,36 +47,64 @@ function StatCard({ label, value, trend, icon: Icon, trendUp }: any) {
 }
 
 export default function Dashboard() {
+  const [revenueData, setRevenueData] = useState<any[]>([]);
+  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const [totalUsers, setTotalUsers] = useState<number>(0);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<number>(0);
+  const [loading, setLoading] = useState(true);
+
+  const fetchDashboardData = async () => {
+    try {
+      setLoading(true);
+      const year = new Date().getFullYear();
+      
+      const [revRes, usersRes] = await Promise.all([
+        adminApi.get(`/payments/revenue-stats?year=${year}`),
+        adminApi.get("/admin/users?limit=5&sort[createdAt]=desc")
+      ]);
+
+      if (revRes.data.success) {
+        const revData = revRes.data.data;
+        setRevenueData(revData);
+        const currMonthIndex = new Date().getMonth();
+        setMonthlyRevenue(revData[currMonthIndex]?.value || 0);
+      }
+      if (usersRes?.data) {
+        if (usersRes.data.users) {
+          setRecentUsers(usersRes.data.users.slice(0, 5));
+        }
+        if (usersRes.data.pagination) {
+          setTotalUsers(usersRes.data.pagination.total || 0);
+        } else if (usersRes.data.users) {
+          setTotalUsers(usersRes.data.users.length);
+        }
+      }
+    } catch (err) {
+      console.error("Lỗi tải dữ liệu dashboard", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, []);
   return (
     <div className="space-y-8">
       {/* Stat Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <StatCard
           label="Tổng người dùng"
-          value="12,543"
-          trend="+12.5%"
+          value={totalUsers.toLocaleString("vi-VN")}
+          trend=""
           icon={Users}
           trendUp={true}
         />
         <StatCard
-          label="Doanh thu tháng"
-          value="45.2M đ"
-          trend="+8.2%"
+          label="Doanh thu tháng này"
+          value={monthlyRevenue.toLocaleString("vi-VN") + " đ"}
+          trend=""
           icon={BarChart3}
-          trendUp={true}
-        />
-        <StatCard
-          label="Gói Premium"
-          value="1,240"
-          trend="-2.4%"
-          icon={CreditCard}
-          trendUp={false}
-        />
-        <StatCard
-          label="Tỷ lệ chuyển đổi"
-          value="3.2%"
-          trend="+0.5%"
-          icon={ArrowUpRight}
           trendUp={true}
         />
       </div>
@@ -114,8 +127,17 @@ export default function Dashboard() {
 
                 <CartesianGrid strokeDasharray="3 3" vertical={false} />
                 <XAxis dataKey="name" />
-                <YAxis />
-                <Tooltip />
+                <YAxis 
+                   tickFormatter={(val) => {
+                     if (val >= 1000000) return (val / 1000000) + 'M';
+                     if (val >= 1000) return (val / 1000) + 'K';
+                     return val;
+                   }} 
+                />
+                <Tooltip 
+                  formatter={(value: any) => [value?.toLocaleString("vi-VN") + " đ", "Doanh thu"]}
+                  contentStyle={{ borderRadius: "12px", border: "none", boxShadow: "0 10px 15px -3px rgb(0 0 0 / 0.1)" }}
+                />
 
                 <Area
                   type="monotone"
@@ -123,6 +145,7 @@ export default function Dashboard() {
                   stroke="#4f46e5"
                   fill="url(#colorValue)"
                   strokeWidth={2}
+                  activeDot={{ r: 6, fill: "#4f46e5", stroke: "#fff", strokeWidth: 2 }}
                 />
               </AreaChart>
             </ResponsiveContainer>
@@ -134,10 +157,10 @@ export default function Dashboard() {
           <h2 className="text-lg font-bold mb-6">Người dùng mới</h2>
 
           <div className="space-y-4">
-            {newUsers.map((user) => (
-              <div key={user.id} className="flex items-center gap-3">
+            {recentUsers.map((user) => (
+              <div key={user._id} className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-600">
-                  {user.name[0]}
+                  {user.name?.[0] || 'U'}
                 </div>
 
                 <div>
@@ -146,6 +169,9 @@ export default function Dashboard() {
                 </div>
               </div>
             ))}
+            {recentUsers.length === 0 && !loading && (
+              <p className="text-sm text-slate-500 text-center py-4">Chưa có người dùng mới</p>
+            )}
           </div>
         </div>
       </div>
