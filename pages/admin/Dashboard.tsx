@@ -60,7 +60,7 @@ export default function Dashboard() {
       
       const [revRes, usersRes] = await Promise.all([
         adminApi.get(`/payments/revenue-stats?year=${year}`),
-        adminApi.get("/admin/users?limit=5&sort[createdAt]=desc")
+        adminApi.get("/users?limit=5&sort[createdAt]=desc")
       ]);
 
       if (revRes.data.success) {

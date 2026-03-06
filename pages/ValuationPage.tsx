@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 // ===============================================================
 // API SERVICE: Giao tiếp với Backend Node.js
 // ===============================================================
-const API_URL = 'http://localhost:5001/api/listings/valuation'; // Đã sửa thành /listings/
+const API_URL = 'http://localhost:5000/api/listings/valuation'; // Đã sửa thành /listings/
 
 async function getValuation(data: any): Promise<{ valuation: number }> {
   console.log("Dữ liệu gửi đến backend:", JSON.stringify(data, null, 2));
