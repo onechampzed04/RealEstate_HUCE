@@ -150,35 +150,39 @@ export default class ListingService {
   }
 
   async update(listingId, userId, data) {
-    const listing = await ListingModel.findOne({ _id: listingId, user: userId });
-    if (!listing) throw new Error("Không tìm thấy bài đăng hoặc bạn không có quyền");
+  const listing = await ListingModel.findOne({ _id: listingId, user: userId });
+  if (!listing) throw new Error("Không tìm thấy bài đăng hoặc bạn không có quyền chỉnh sửa");
 
-    const fieldsToUpdate = [
-      "title", "description", "type", "propertyType", 
-      "price", "area", "bedrooms", "bathrooms", "images"
-    ];
+  const allowedFields = [
+    "title", "description", "type", "propertyType",
+    "price", "area", "bedrooms", "bathrooms", "images"
+  ];
 
-    fieldsToUpdate.forEach((field) => {
-      if (data[field] !== undefined) listing[field] = data[field];
-    });
-
-    if (data.address || data.city) {
-      listing.location = {
-        ...listing.location,
-        address: data.address || listing.location.address,
-        city: data.city || listing.location.city,
-        district: data.district || listing.location.district,
-        ward: data.ward || listing.location.ward,
-      };
+  allowedFields.forEach(field => {
+    if (data[field] !== undefined) {
+      listing[field] = data[field];
     }
+  });
 
-    // Preserve the original status or default to APPROVED depending on logic
-    // But setting it to APPROVED for consistency if it was strictly hardcoded
-    listing.status = "APPROVED";
-    await listing.save();
-    this.invalidateCache();
-    return listing;
+  // Xử lý location
+  if (data.address || data.city || data.district || data.ward) {
+    listing.location = {
+      ...listing.location,
+      address: data.address ?? listing.location?.address,
+      city: data.city ?? listing.location?.city,
+      district: data.district ?? listing.location?.district,
+      ward: data.ward ?? listing.location?.ward,
+    };
   }
+
+  // Khi update → đưa về trạng thái chờ duyệt lại (tùy business rule)
+  listing.status = "APPROVED";   // ← thay đổi này rất quan trọng
+
+  await listing.save();
+  this.invalidateCache();
+
+  return listing;
+}
 
   async delete(listingId, userId) {
     const result = await ListingModel.findOneAndDelete({ _id: listingId, user: userId });

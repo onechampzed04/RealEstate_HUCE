@@ -40,7 +40,7 @@ function App() {
               <Route path="valuation" element={<ValuationPage />} />
               <Route path="login" element={<LoginPage />} />
               <Route path="register" element={<RegisterPage />} />
-
+              
               {/* Protected User Routes */}
               <Route
                 path="profile"

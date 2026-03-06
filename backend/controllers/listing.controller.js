@@ -53,14 +53,15 @@ export default class ListingController {
 
   // 5. Cập nhật tin (Thêm từ nhánh 'than')
   updateListing = asyncHandler(async (req, res) => {
-    const { id } = req.params;
-    const updatedListing = await this.listingService.update(id, req.userId, req.body);
-    res.json({
-      success: true,
-      message: "Cập nhật thành công. Tin đang được chờ duyệt lại.",
-      data: updatedListing,
-    });
+  const { id } = req.params;
+  const updatedListing = await this.listingService.update(id, req.userId, req.body);
+
+  res.json({
+    success: true,
+    message: "Cập nhật thành công. Bài đăng đã được gửi lại để duyệt.",
+    data: updatedListing,
   });
+});
 
   // 6. Xóa tin (Thêm từ nhánh 'than')
   deleteListing = asyncHandler(async (req, res) => {
