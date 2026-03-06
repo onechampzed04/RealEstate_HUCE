@@ -159,7 +159,7 @@ const SubmitPropertyPage: React.FC = () => {
       
       // Chuyển hướng sau 2 giây
       setTimeout(() => {
-        navigate('/my-listings'); 
+        navigate('/profile'); 
       }, 2000);
 
     } catch (err: any) {

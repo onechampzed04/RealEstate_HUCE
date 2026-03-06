@@ -15,7 +15,7 @@ import {
 import { cn } from "../../lib/utils";
 import adminApi from "../../lib/adminApi";
 
-export default function Plans() {
+export default function Plans() { 
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,8 +82,9 @@ export default function Plans() {
       maxPostsPerDay: 5,
       maxTotalPosts: 50,
       priority: 0,
-      allowHotPost: false,
-      autoApprove: false,
+      // Đặt mặc định là true ở đây
+      allowHotPost: true, 
+      autoApprove: true,
     });
     setDisplayPrice("0");
     setIsModalOpen(true);
@@ -137,13 +138,21 @@ export default function Plans() {
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
+  e.preventDefault();
+  
+  // Tạo bản sao data và ép giá trị là true
+  const submitData = {
+    ...formData,
+    allowHotPost: true,
+    autoApprove: true
+  };
+
+  try {
       if (editingPlan) {
-        const res = await adminApi.put(`/packages/${editingPlan._id}`, formData);
+        const res = await adminApi.put(`/packages/${editingPlan._id}`, submitData);
         if (res.data?.success) alert("Cập nhật thành công");
       } else {
-        const res = await adminApi.post(`/packages`, formData);
+        const res = await adminApi.post(`/packages`, submitData);
         if (res.data?.success) alert("Thêm mới thành công");
       }
       setIsModalOpen(false);
@@ -501,41 +510,7 @@ export default function Plans() {
                   ></textarea>
                 </div>
                 
-                <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col sm:flex-row gap-6">
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <div className="relative flex items-center">
-                      <input
-                        type="checkbox"
-                        name="allowHotPost"
-                        checked={formData.allowHotPost}
-                        onChange={handleInputChange}
-                        className="peer sr-only"
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">Cho phép đăng tin Nổi bật</span>
-                      <p className="text-xs text-slate-500 mt-0.5">Xếp hạng tin cao hơn</p>
-                    </div>
-                  </label>
-                  
-                  <label className="flex items-center gap-3 cursor-pointer group">
-                    <div className="relative flex items-center">
-                      <input
-                        type="checkbox"
-                        name="autoApprove"
-                        checked={formData.autoApprove}
-                        onChange={handleInputChange}
-                        className="peer sr-only"
-                      />
-                      <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
-                    </div>
-                    <div>
-                      <span className="text-sm font-bold text-slate-700 group-hover:text-indigo-600 transition-colors">Duyệt tự động</span>
-                      <p className="text-xs text-slate-500 mt-0.5">Tin đăng tự lên ngay</p>
-                    </div>
-                  </label>
-                </div>
+                
               </form>
             </div>
             <div className="p-6 border-t border-slate-100 bg-slate-50/50 flex justify-end gap-3 mt-auto">

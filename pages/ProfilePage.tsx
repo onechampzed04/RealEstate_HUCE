@@ -1,8 +1,7 @@
-
 import React, { useEffect, useState } from 'react';
 import useAuth from '../hooks/useAuth';
 import Button from '../components/Button';
-import { FaEdit } from 'react-icons/fa';
+import { FaEdit, FaTrash } from 'react-icons/fa';
 import ChangePasswordModal from '../components/ChangePasswordModal';
 import ChangeNameModal from '../components/ChangeNameModal';
 import ChangeEmailModal from '../components/ChangeEmailModal';
@@ -10,15 +9,22 @@ import ChangePhoneModal from '../components/ChangePhoneModal';
 import AvatarPlaceholder from '../components/AvatarPlaceholder';
 import AvatarUploadModal from '../components/AvatarUploadModal';
 
+import { fetchMyListings, deleteListing, Listing } from '../services/api';
+
 const ProfilePage: React.FC = () => {
+
     const { user, token, updateUser } = useAuth();
-    
+
     const [passwordModalOpen, setPasswordModalOpen] = useState(false);
     const [nameModalOpen, setNameModalOpen] = useState(false);
     const [emailModalOpen, setEmailModalOpen] = useState(false);
     const [phoneModalOpen, setPhoneModalOpen] = useState(false);
     const [avatarModalOpen, setAvatarModalOpen] = useState(false);
-    const [userAvatar, setUserAvatar] = useState<string | undefined>(undefined);
+
+    const [userAvatar, setUserAvatar] = useState<string | undefined>();
+
+    const [listings, setListings] = useState<Listing[]>([]);
+    const [loadingListings, setLoadingListings] = useState(true);
 
     useEffect(() => {
         if (user?.avatar) {
@@ -30,115 +36,265 @@ const ProfilePage: React.FC = () => {
         }
     }, [user]);
 
-    const handleAvatarUploadSuccess = (avatarUrl: string) => {
-        setUserAvatar(avatarUrl);
-        if (user) {
-            // Lấy publicId cũ một cách an toàn
-            const oldPublicId = (typeof user.avatar === 'object' && user.avatar !== null) 
-                ? (user.avatar as any).publicId 
-                : null;
+    // load listings
+    useEffect(() => {
 
-            updateUser({ 
-                ...user, 
+        const loadListings = async () => {
+
+            if (!token) return;
+
+            try {
+                const data = await fetchMyListings(token);
+                setListings(data.listings || []);
+            } catch (error) {
+                console.error("Lỗi lấy listings:", error);
+            } finally {
+                setLoadingListings(false);
+            }
+
+        };
+
+        loadListings();
+
+    }, [token]);
+
+    // delete listing
+    const handleDelete = async (id: string) => {
+
+        if (!token) return;
+
+        const confirmDelete = window.confirm("Bạn có chắc muốn xóa bài đăng này?");
+        if (!confirmDelete) return;
+
+        try {
+
+            await deleteListing(id, token);
+
+            setListings((prev) => prev.filter((item) => item._id !== id));
+
+        } catch (error) {
+
+            console.error("Xóa listing lỗi:", error);
+
+        }
+
+    };
+
+    const handleAvatarUploadSuccess = (avatarUrl: string) => {
+
+        setUserAvatar(avatarUrl);
+
+        if (user) {
+
+            const oldPublicId =
+                typeof user.avatar === 'object' && user.avatar !== null
+                    ? (user.avatar as any).publicId
+                    : null;
+
+            updateUser({
+                ...user,
                 avatar: {
                     url: avatarUrl,
                     publicId: oldPublicId,
-                }
+                },
             });
+
         }
+
     };
-    
+
     return (
-        <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto py-12 px-4">
+
             <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold text-gray-900">Hồ Sơ Của Tôi</h1>
-                <div className="flex gap-2">
-                    <Button 
-                        size="lg" 
-                        variant="primary"
-                        onClick={() => setPasswordModalOpen(true)}
-                    >
-                        Đổi Mật Khẩu
-                    </Button>
-                </div>
+                <h1 className="text-3xl font-bold">Hồ sơ của tôi</h1>
+
+                <Button
+                    size="lg"
+                    variant="primary"
+                    onClick={() => setPasswordModalOpen(true)}
+                >
+                    Đổi mật khẩu
+                </Button>
             </div>
 
-            <div className="mt-8 flex items-center gap-6 bg-white p-8 rounded-lg shadow-md mb-8">
+            {/* USER INFO */}
+
+            <div className="mt-8 flex items-center gap-6 bg-white p-8 rounded-lg shadow">
+
                 <div className="relative">
+
                     <AvatarPlaceholder
-                        name={user?.name || 'User'}
+                        name={user?.name || "User"}
                         avatarUrl={userAvatar}
                         size="xl"
                     />
+
                     <button
                         onClick={() => setAvatarModalOpen(true)}
-                        className="absolute bottom-0 right-0 bg-blue-500 hover:bg-blue-600 text-white rounded-full p-2 shadow-lg transition"
-                        title="Chỉnh sửa ảnh đại diện"
+                        className="absolute bottom-0 right-0 bg-blue-500 text-white p-2 rounded-full"
                     >
                         <FaEdit />
                     </button>
+
                 </div>
+
                 <div>
-                    <p className="text-2xl font-bold text-gray-900">{user?.name}</p>
+
+                    <p className="text-2xl font-bold">{user?.name}</p>
                     <p className="text-gray-600">{user?.email}</p>
+
                 </div>
+
             </div>
 
-            <div className="mt-8 bg-white p-8 rounded-lg shadow-md">
-                <p className='flex gap-2 items-center'><strong>Tên:</strong> {user?.name}
-                    <button 
+            {/* USER DETAILS */}
+
+            <div className="mt-8 bg-white p-8 rounded-lg shadow">
+
+                <p className="flex gap-2 items-center">
+                    <strong>Tên:</strong> {user?.name}
+
+                    <button
                         onClick={() => setNameModalOpen(true)}
-                        className="text-blue-500 hover:text-blue-700"
+                        className="text-blue-500"
                     >
-                        <FaEdit className="mr-2" />
+                        <FaEdit />
                     </button>
+
                 </p>
-                <p className='flex gap-2 items-center'><strong>Số điện thoại:</strong> {user?.phone}
-                    <button 
+
+                <p className="flex gap-2 items-center">
+
+                    <strong>SĐT:</strong> {user?.phone}
+
+                    <button
                         onClick={() => setPhoneModalOpen(true)}
-                        className="text-blue-500 hover:text-blue-700"
+                        className="text-blue-500"
                     >
-                        <FaEdit className="mr-2" />
+                        <FaEdit />
                     </button>
+
                 </p>
-                <p className='flex gap-2 items-center'><strong>Email:</strong> {user?.email}
-                    <button 
+
+                <p className="flex gap-2 items-center">
+
+                    <strong>Email:</strong> {user?.email}
+
+                    <button
                         onClick={() => setEmailModalOpen(true)}
-                        className="text-blue-500 hover:text-blue-700"
+                        className="text-blue-500"
                     >
-                        <FaEdit className="mr-2" />
+                        <FaEdit />
                     </button>
+
                 </p>
-                <h2 className="text-2xl font-bold text-gray-800 mt-8 mb-4">Bất động sản của tôi</h2>
-                <div className="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">
-                    <p>Chức năng quản lý bất động sản sẽ được phát triển ở đây.</p>
-                    <p>Bạn chưa đăng bất động sản nào.</p>
-                </div>
+
+                {/* MY LISTINGS */}
+
+                <h2 className="text-2xl font-bold mt-10 mb-4">
+                    Bất động sản của tôi
+                </h2>
+
+                {loadingListings ? (
+
+                    <p>Đang tải dữ liệu...</p>
+
+                ) : listings.length === 0 ? (
+
+                    <div className="text-center text-gray-500 p-8 border-2 border-dashed rounded-lg">
+                        Bạn chưa đăng bất động sản nào.
+                    </div>
+
+                ) : (
+
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+
+                        {listings.map((listing) => (
+
+                            <div
+                                key={listing._id}
+                                className="border rounded-lg p-4 shadow hover:shadow-lg transition"
+                            >
+
+                                <h3 className="font-bold text-lg">
+                                    {listing.title}
+                                </h3>
+
+                                <p className="text-red-500 font-semibold">
+
+                                    {listing.price.toLocaleString()} VND
+
+                                </p>
+
+                                <p>
+
+                                    {listing.area} m²
+
+                                </p>
+
+                                <p className="text-gray-500">
+
+                                    {listing.location?.city}
+
+                                </p>
+
+                                <div className="flex gap-3 mt-4">
+
+                                    <button className="flex items-center gap-1 text-blue-500">
+                                        <FaEdit />
+                                        Sửa
+                                    </button>
+
+                                    <button
+                                        onClick={() => handleDelete(listing._id)}
+                                        className="flex items-center gap-1 text-red-500"
+                                    >
+                                        <FaTrash />
+                                        Xóa
+                                    </button>
+
+                                </div>
+
+                            </div>
+
+                        ))}
+
+                    </div>
+
+                )}
+
             </div>
 
-            {/* Modals */}
-            <ChangePasswordModal 
+            {/* MODALS */}
+
+            <ChangePasswordModal
                 isOpen={passwordModalOpen}
                 onClose={() => setPasswordModalOpen(false)}
             />
-            <ChangeNameModal 
+
+            <ChangeNameModal
                 isOpen={nameModalOpen}
                 onClose={() => setNameModalOpen(false)}
             />
-            <ChangeEmailModal 
+
+            <ChangeEmailModal
                 isOpen={emailModalOpen}
                 onClose={() => setEmailModalOpen(false)}
             />
-            <ChangePhoneModal 
+
+            <ChangePhoneModal
                 isOpen={phoneModalOpen}
                 onClose={() => setPhoneModalOpen(false)}
             />
+
             <AvatarUploadModal
                 isOpen={avatarModalOpen}
                 onClose={() => setAvatarModalOpen(false)}
                 onUploadSuccess={handleAvatarUploadSuccess}
                 token={token}
             />
+
         </div>
     );
 };

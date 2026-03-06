@@ -8,17 +8,36 @@ const router = express.Router();
 const listingController = new ListingController();
 
 // ==========================================
-// PUBLIC ROUTES (Ai cũng có thể xem)
+// PUBLIC ROUTES
 // ==========================================
 
-// Lấy danh sách tin đăng đã duyệt (Có cache 5 phút)
+// Lấy danh sách tin đăng
 router.get(
   "/",
   cacheMiddleware({ ttl: 300 }),
   listingController.getAllListings
 );
 
-// Lấy chi tiết bài đăng
+// ==========================================
+// PROTECTED ROUTES
+// ==========================================
+
+// ⚠️ PHẢI ĐẶT TRƯỚC /:id
+router.get("/my-listings", authenticate, listingController.getMyListings);
+
+// Tạo bài đăng
+router.post("/", authenticate, listingController.createListing);
+
+// Cập nhật
+router.put("/:id", authenticate, listingController.updateListing);
+
+// Xóa
+router.delete("/:id", authenticate, listingController.deleteListing);
+
+// ==========================================
+// PUBLIC ROUTE CHI TIẾT
+// ==========================================
+
 router.get(
   "/:id",
   cacheMiddleware({ ttl: 300 }),
@@ -26,21 +45,9 @@ router.get(
 );
 
 // ==========================================
-// PROTECTED ROUTES (Yêu cầu đăng nhập)
+// AI valuation
 // ==========================================
 
-// Lấy danh sách tin cá nhân của người dùng
-router.get("/my-listings", authenticate, listingController.getMyListings);
-
-// Tạo bài đăng mới
-router.post("/", authenticate, listingController.createListing);
-
-// Cập nhật bài đăng (Chủ sở hữu)
-router.put("/:id", authenticate, listingController.updateListing);
-
-// Xóa bài đăng (Chủ sở hữu)
-router.delete("/:id", authenticate, listingController.deleteListing);
-
-router.route('/valuation').post(getValuation);
+router.route("/valuation").post(getValuation);
 
 export default router;
