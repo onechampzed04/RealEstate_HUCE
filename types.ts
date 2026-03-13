@@ -1,19 +1,26 @@
 export interface Property {
   _id: string;
-  id?: string; // Giữ id từ HEAD để tránh lỗi ở các component cũ
+  id?: string; // Giữ để tương thích ngược
   title: string;
   description: string;
   
-  // Hòa giải Type: Cho phép cả hai định dạng từ HEAD và than
-  type: 'SALE' | 'RENT' | 'House' | 'Apartment' | 'Villa' | 'Land' | 'For Sale' | 'For Rent';
-  propertyType?: 'APARTMENT' | 'HOUSE' | 'LAND' | 'VILLA'; 
+  // 1. Cập nhật Type thành Hướng nhà (theo Model & UI mới)
+  type: 'Đông' | 'Tây' | 'Nam' | 'Bắc' | 'Đông Bắc' | 'Đông Nam' | 'Tây Bắc' | 'Tây Nam';
+
+  // 2. Cập nhật propertyType thành Pháp lý (theo Model & UI mới)
+  propertyType: 'Sổ hồng/Sổ đỏ' | 'Hợp đồng' | 'Đang chờ sổ' | 'Khác'; 
 
   price: number;
   area: number;
-  bedrooms: number; // Đổi về bắt buộc để Card hiển thị đẹp, hoặc giữ ? nếu muốn
+  bedrooms: number; 
   bathrooms: number;
 
-  // Cấu trúc Location lồng nhau (Từ nhánh than)
+  // --- CÁC TRƯỜNG BỔ SUNG CHO ĐỊNH GIÁ AI ---
+  floors?: number;       // Số tầng
+  frontage?: number;     // Mặt tiền (m)
+  furnitureStatus?: 'Nội thất đầy đủ' | 'Nội thất cơ bản' | 'Không nội thất' | 'Khác'; 
+
+  // Cấu trúc Location lồng nhau
   location: {
     address: string;
     city: string;
@@ -22,23 +29,23 @@ export interface Property {
     coordinates?: [number, number];
   };
 
-  // Các trường phẳng (Từ HEAD) - Giữ lại để tương thích với dữ liệu cũ
+  // Các trường phẳng (Giữ lại nếu các trang danh sách cũ vẫn dùng)
   address?: string;
   city?: string;
 
-  // Hình ảnh: than dùng images[], HEAD dùng imageUrl/gallery
+  // Hình ảnh
   images: string[]; 
   imageUrl?: string; 
   gallery?: string[];
 
   // Trạng thái bài đăng
-  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED' | 'For Sale' | 'For Rent';
+  status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
 
   createdAt: string;
   updatedAt: string;
 
-  // Người đăng: than dùng user, HEAD dùng agent
-  user?: User;
+  // Người đăng
+  user?: User; 
   agent?: {
     name: string;
     avatar: string;

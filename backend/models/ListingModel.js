@@ -58,13 +58,13 @@ const listingSchema = new mongoose.Schema(
     approvedAt: Date,
     expiredAt: Date,
 
-    favoriteCount: {
-      type: Number,
-      default: 0,
-    },
-
-    isHot: { type: Boolean, default: false },
-    views: { type: Number, default: 0 },
+    frontage: { type: Number, default: 0 }, // Thay cho favoriteCount (Mặt tiền)
+    floors: { type: Number, default: 1 },    // Thay cho views (Số tầng)
+    furnitureStatus: { 
+      type: String, 
+      enum: ['Nội thất đầy đủ', 'Nội thất cơ bản', 'Không nội thất', 'Khác'],
+      default: 'Khác'
+    }, 
   },
   { timestamps: true },
 );

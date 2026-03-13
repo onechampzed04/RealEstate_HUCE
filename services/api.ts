@@ -295,6 +295,9 @@ export interface ListingFormData {
     area: number;
     bedrooms?: number;
     bathrooms?: number;
+    frontage?: number; // Mặt tiền
+    floors?: number;   // Số tầng
+    furniture_state?: 'Nội thất đầy đủ' | 'Nội thất cơ bản' | 'Không nội thất' | 'Khác';
     address: string;
     city: string;
     district?: string;
@@ -312,6 +315,9 @@ export interface Listing {
     area: number;
     bedrooms?: number;
     bathrooms?: number;
+    frontage?: number; // Mặt tiền
+    floors?: number;   // Số tầng
+    furnitureStatus?: 'Nội thất đầy đủ' | 'Nội thất cơ bản' | 'Không nội thất' | 'Khác';
     location: {
         address?: string;
         city?: string;

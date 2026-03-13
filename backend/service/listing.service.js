@@ -133,9 +133,23 @@ export default class ListingService {
     // Lưu thay đổi vào DB
     await activePackage.save();
 
-    const listing = await ListingModel.create({
+     const listing = await ListingModel.create({
       user: userId,
-      ...data, // 'images' nằm trong data này (là mảng URL sau khi upload thành công)
+      title: data.title,
+      description: data.description,
+      type: data.type,
+      propertyType: data.propertyType,
+      price: Number(data.price),
+      area: Number(data.area),
+      bedrooms: Number(data.bedrooms),
+      bathrooms: Number(data.bathrooms),
+      
+      // Các trường mới nằm ở cấp cao nhất của Schema
+      floors: Number(data.floors) || 1,
+      frontage: Number(data.frontage) || 0,
+      furnitureStatus: data.furniture_state || 'Khác', 
+      
+      images: data.images,
       location: {
         address: data.address,
         city: data.city,
@@ -145,82 +159,79 @@ export default class ListingService {
       },
       status: "APPROVED",
     });
-    
     this.invalidateCache();
     return listing;
   }
 
   async update(listingId, userId, data) {
-  const listing = await ListingModel.findOne({ _id: listingId, user: userId });
-  if (!listing) throw new Error("Không tìm thấy bài đăng hoặc bạn không có quyền");
+    const listing = await ListingModel.findOne({ _id: listingId, user: userId });
+    if (!listing) throw new Error("Không tìm thấy bài đăng hoặc bạn không có quyền");
 
-  const { latitude, longitude, images, ...otherData } = data;
+    // Các trường số cần ép kiểu để AI không bị lỗi
+    const numericFields = ["price", "area", "bedrooms", "bathrooms", "floors", "frontage"];
 
-  // Update basic fields
-  Object.keys(otherData).forEach(field => {
-    if (otherData[field] !== undefined && field !== "coordinates") {
-      if (["price", "area", "bedrooms", "bathrooms"].includes(field)) {
-        listing[field] = Number(otherData[field]);
-      } else {
-        listing[field] = otherData[field];
+    // 1. Cập nhật các trường cơ bản và trường mới cho AI
+    Object.keys(data).forEach(field => {
+      if (data[field] !== undefined) {
+        if (numericFields.includes(field)) {
+          listing[field] = Number(data[field]);
+        } else if (field === 'furniture_state') {
+          // Map từ furniture_state (frontend) sang furnitureStatus (DB Model)
+          listing.furnitureStatus = data[field];
+        } else if (!['address', 'city', 'district', 'ward', 'images', 'existingImages', 'latitude', 'longitude'].includes(field)) {
+          // Chỉ cập nhật nếu trường đó tồn tại trong Schema
+          listing[field] = data[field];
+        }
+      }
+    });
+
+    // 2. Cập nhật Vị trí (Sử dụng trực tiếp biến "data")
+    if (data.address || data.city || data.district || data.ward) {
+      listing.location = {
+        ...listing.location,
+        address: data.address || listing.location.address,
+        city: data.city || listing.location.city,
+        district: data.district || listing.location.district,
+        ward: data.ward || listing.location.ward
+      };
+    }
+
+    // 3. Cập nhật tọa độ (nếu có gửi lên)
+    if (data.latitude !== undefined && data.longitude !== undefined) {
+      listing.location.coordinates = [Number(data.longitude), Number(data.latitude)];
+    }
+
+    // 4. Xử lý Hình ảnh (Đã gộp từ controller gửi qua)
+    if (data.images !== undefined) {
+      let parsedImages = data.images;
+      // Nếu images gửi qua là string (do FormData), hãy parse nó
+      try {
+        if (typeof data.images === "string") {
+          parsedImages = JSON.parse(data.images);
+        }
+      } catch (e) {
+        parsedImages = data.images;
+      }
+
+      if (Array.isArray(parsedImages)) {
+        listing.images = parsedImages
+          .map(img => (typeof img === "string" ? img : img.url))
+          .filter(Boolean);
       }
     }
-  });
 
-  // Update address
-  if (otherData.address || otherData.city || otherData.district || otherData.ward) {
-    listing.location = {
-      ...listing.location,
-      address: otherData.address || listing.location.address,
-      city: otherData.city || listing.location.city,
-      district: otherData.district || listing.location.district,
-      ward: otherData.ward || listing.location.ward
-    };
+    // Đánh dấu để Mongoose biết các Object lồng nhau đã thay đổi
+    listing.markModified("location");
+    listing.markModified("images");
+
+    // Đặt lại trạng thái (ví dụ bài đăng sửa xong cần duyệt lại, hoặc để APPROVED tùy bạn)
+    listing.status = "APPROVED";
+
+    await listing.save();
+    this.invalidateCache();
+
+    return listing;
   }
-
-  // Update coordinates
-  if (
-    latitude !== undefined &&
-    longitude !== undefined &&
-    latitude !== null &&
-    longitude !== null
-  ) {
-    listing.location.coordinates = [Number(longitude), Number(latitude)];
-  }
-
-  if (images !== undefined) {
-    let parsedImages = images;
-
-    try {
-      if (typeof images === "string") {
-        parsedImages = JSON.parse(images);
-      }
-    } catch (e) {
-      parsedImages = [];
-    }
-
-    if (Array.isArray(parsedImages)) {
-      listing.images = parsedImages
-        .map(img => {
-          if (typeof img === "string") return img;
-          if (img && typeof img === "object" && img.url) return img.url;
-          return null;
-        })
-        .filter(Boolean);
-    }
-  }
-
-  listing.markModified("location");
-  listing.markModified("images");
-
-  listing.status = "APPROVED";
-
-  await listing.save();
-
-  this.invalidateCache();
-
-  return listing;
-}
 
   async delete(listingId, userId) {
     const result = await ListingModel.findOneAndDelete({ _id: listingId, user: userId });
