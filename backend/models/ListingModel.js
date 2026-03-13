@@ -15,14 +15,14 @@ const listingSchema = new mongoose.Schema(
 
     type: {
       type: String,
-      enum: ["SALE", "RENT"],
-      default: "SALE",
+      enum: ["Đông", "Tây", "Nam", "Bắc", "Đông Bắc", "Đông Nam", "Tây Bắc", "Tây Nam"],
+      default: "Đông",
       required: true,
     },
 
     propertyType: {
       type: String,
-      enum: ["APARTMENT", "HOUSE", "LAND", "VILLA"],
+      enum: ['Sổ hồng/Sổ đỏ', 'Hợp đồng', 'Đang chờ sổ', 'Khác'],
       required: true,
     },
 

@@ -37,8 +37,8 @@ const SubmitPropertyPage: React.FC = () => {
   const [formData, setFormData] = useState<ListingFormData>({
     title: '',
     description: '',
-    type: 'SALE',
-    propertyType: 'HOUSE',
+    type: 'Đông',
+    propertyType: 'Sổ hồng/Sổ đỏ',
     price: 0,
     area: 0,
     bedrooms: 0,
@@ -407,30 +407,36 @@ const SubmitPropertyPage: React.FC = () => {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Hình thức *</label>
-                    <select 
-                      name="type" 
-                      value={formData.type}
-                      onChange={handleInputChange}
-                      className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-[#1A237E] focus:outline-none"
-                    >
-                      <option value="SALE">Bán</option>
-                      <option value="RENT">Cho thuê</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Loại bất động sản *</label>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Tình Trạng Pháp Lý *</label>
                     <select 
                       name="propertyType" 
                       value={formData.propertyType}
                       onChange={handleInputChange}
                       className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-[#1A237E] focus:outline-none"
                     >
-                      <option value="APARTMENT">Căn hộ chung cư</option>
-                      <option value="HOUSE">Nhà riêng/Nhà phố</option>
-                      <option value="VILLA">Biệt thự</option>
-                      <option value="LAND">Đất nền</option>
+                      <option value="Sổ hồng/Sổ đỏ">Sổ hồng/Sổ đỏ</option>
+                      <option value="Hợp đồng">Hợp đồng</option>
+                      <option value="Đang chờ sổ">Đang chờ sổ</option>
+                      <option value="Khác">Khác</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">Hướng bất động sản *</label>
+                    <select 
+                      name="type" 
+                      value={formData.type}
+                      onChange={handleInputChange}
+                      className="w-full p-3 border border-gray-300 rounded focus:ring-2 focus:ring-[#1A237E] focus:outline-none"
+                    >
+                      <option value="Đông">Đông</option>
+                      <option value="Tây">Tây</option>
+                      <option value="Nam">Nam</option>
+                      <option value="Bắc">Bắc</option>
+                      <option value="Đông Bắc">Đông Bắc</option>
+                      <option value="Đông Nam">Đông Nam</option>
+                      <option value="Tây Bắc">Tây Bắc</option>
+                      <option value="Tây Nam">Tây Nam</option>
                     </select>
                   </div>
 
@@ -633,7 +639,7 @@ const SubmitPropertyPage: React.FC = () => {
                     'Đăng Tin Ngay'
                   )}
                 </button>
-              </div>
+              </div>z
             </div>
           </form>
           </div>

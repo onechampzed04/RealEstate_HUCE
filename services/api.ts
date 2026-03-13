@@ -284,8 +284,8 @@ export const checkOrderStatus = async (orderCode: number, token: string): Promis
 export interface ListingFormData {
     title: string;
     description: string;
-    type: 'SALE' | 'RENT';
-    propertyType: 'APARTMENT' | 'HOUSE' | 'LAND' | 'VILLA';
+    type: 'Đông' | 'Tây' | 'Nam' | 'Bắc' | 'Đông Bắc' | 'Đông Nam' | 'Tây Bắc' | 'Tây Nam';
+    propertyType: 'Sổ hồng/Sổ đỏ' | 'Hợp đồng' | 'Đang chờ sổ' | 'Khác';
     price: number;
     area: number;
     bedrooms?: number;
@@ -301,8 +301,8 @@ export interface Listing {
     _id: string;
     title: string;
     description: string;
-    type: 'SALE' | 'RENT';
-    propertyType: 'APARTMENT' | 'HOUSE' | 'LAND' | 'VILLA';
+    type: 'Đông' | 'Tây' | 'Nam' | 'Bắc' | 'Đông Bắc' | 'Đông Nam' | 'Tây Bắc' | 'Tây Nam';
+    propertyType: 'Sổ hồng/Sổ đỏ' | 'Hợp đồng' | 'Đang chờ sổ' | 'Khác';
     price: number;
     area: number;
     bedrooms?: number;
