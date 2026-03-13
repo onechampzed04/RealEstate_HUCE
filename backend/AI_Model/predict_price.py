@@ -11,17 +11,24 @@ import datetime
 import os
 
 from catboost import CatBoostRegressor
+<<<<<<< HEAD
 # Cấu hình UTF-8 để xử lý tiếng Việt trên mọi môi trường
+=======
+>>>>>>> origin/thanmoi
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
 sys.stdin = io.TextIOWrapper(sys.stdin.buffer, encoding='utf-8')
 
+<<<<<<< HEAD
 # <<<--- HỆ SỐ TĂNG TRƯỞNG THỊ TRƯỜNG --->>>
 # Cập nhật con số này hàng tuần. Ví dụ: 1.002 = tăng 0.2%
 # =============================================================================
 # HỆ SỐ TĂNG TRƯỞNG THỊ TRƯỜNG - TỰ ĐỘNG CẬP NHẬT HÀNG TUẦN
 # =============================================================================
 MARKET_GROWTH_FACTOR = 1.12  # Giá trị khởi tạo hiện tại (theo yêu cầu)
+=======
+MARKET_GROWTH_FACTOR = 1.12 
+>>>>>>> origin/thanmoi
 STATE_FILE = os.path.join(os.path.dirname(__file__), 'market_growth_state.json')
 
 # Biến ghi thời gian hiện tại khi script chạy

@@ -6,6 +6,7 @@ export default class ListingService {
     clearCacheKey("listings");
   }
 
+  
   /**
    * Lấy danh sách tin đăng (Công khai - Đã duyệt)
    * Kết hợp bộ lọc nâng cao từ HEAD và Populate từ nhánh Than
@@ -151,34 +152,71 @@ export default class ListingService {
 
   async update(listingId, userId, data) {
   const listing = await ListingModel.findOne({ _id: listingId, user: userId });
-  if (!listing) throw new Error("Không tìm thấy bài đăng hoặc bạn không có quyền chỉnh sửa");
+  if (!listing) throw new Error("Không tìm thấy bài đăng hoặc bạn không có quyền");
 
-  const allowedFields = [
-    "title", "description", "type", "propertyType",
-    "price", "area", "bedrooms", "bathrooms", "images"
-  ];
+  const { latitude, longitude, images, ...otherData } = data;
 
-  allowedFields.forEach(field => {
-    if (data[field] !== undefined) {
-      listing[field] = data[field];
+  // Update basic fields
+  Object.keys(otherData).forEach(field => {
+    if (otherData[field] !== undefined && field !== "coordinates") {
+      if (["price", "area", "bedrooms", "bathrooms"].includes(field)) {
+        listing[field] = Number(otherData[field]);
+      } else {
+        listing[field] = otherData[field];
+      }
     }
   });
 
-  // Xử lý location
-  if (data.address || data.city || data.district || data.ward) {
+  // Update address
+  if (otherData.address || otherData.city || otherData.district || otherData.ward) {
     listing.location = {
       ...listing.location,
-      address: data.address ?? listing.location?.address,
-      city: data.city ?? listing.location?.city,
-      district: data.district ?? listing.location?.district,
-      ward: data.ward ?? listing.location?.ward,
+      address: otherData.address || listing.location.address,
+      city: otherData.city || listing.location.city,
+      district: otherData.district || listing.location.district,
+      ward: otherData.ward || listing.location.ward
     };
   }
 
-  // Khi update → đưa về trạng thái chờ duyệt lại (tùy business rule)
-  listing.status = "APPROVED";   // ← thay đổi này rất quan trọng
+  // Update coordinates
+  if (
+    latitude !== undefined &&
+    longitude !== undefined &&
+    latitude !== null &&
+    longitude !== null
+  ) {
+    listing.location.coordinates = [Number(longitude), Number(latitude)];
+  }
+
+  if (images !== undefined) {
+    let parsedImages = images;
+
+    try {
+      if (typeof images === "string") {
+        parsedImages = JSON.parse(images);
+      }
+    } catch (e) {
+      parsedImages = [];
+    }
+
+    if (Array.isArray(parsedImages)) {
+      listing.images = parsedImages
+        .map(img => {
+          if (typeof img === "string") return img;
+          if (img && typeof img === "object" && img.url) return img.url;
+          return null;
+        })
+        .filter(Boolean);
+    }
+  }
+
+  listing.markModified("location");
+  listing.markModified("images");
+
+  listing.status = "APPROVED";
 
   await listing.save();
+
   this.invalidateCache();
 
   return listing;

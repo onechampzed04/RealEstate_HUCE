@@ -1,5 +1,6 @@
 import asyncHandler from "express-async-handler";
 import ListingService from "../service/listing.service.js";
+import { uploadImage } from "../service/image.service.js";
 
 // GIỮ LẠI CÁC IMPORT CỦA AI
 import { spawn } from 'child_process'; 
@@ -51,19 +52,64 @@ export default class ListingController {
     });
   });
 
-  // 5. Cập nhật tin (Thêm từ nhánh 'than')
+  // 5. Cập nhật tin
   updateListing = asyncHandler(async (req, res) => {
-  const { id } = req.params;
-  const updatedListing = await this.listingService.update(id, req.userId, req.body);
+    const { id } = req.params;
+    const { files } = req;
+    
+    let imageUrls = [];
 
-  res.json({
-    success: true,
-    message: "Cập nhật thành công. Bài đăng đã được gửi lại để duyệt.",
-    data: updatedListing,
+    // Nếu có file mới, upload lên Cloudinary
+    if (files && files.length > 0) {
+      for (const file of files) {
+        const result = await uploadImage(file.buffer);
+        imageUrls.push({
+          url: result.secure_url,
+          publicId: result.public_id,
+        });
+      }
+    }
+
+    // Lấy danh sách ảnh cũ được gửi từ frontend
+    let finalImages = [];
+    if (req.body.existingImages) {
+      try {
+        finalImages = JSON.parse(req.body.existingImages);
+      } catch (e) {
+        finalImages = [];
+      }
+    }
+
+    // Hợp nhất ảnh cũ (còn giữ lại) và ảnh mới
+    finalImages = [...finalImages, ...imageUrls];
+
+    // Tạo updateData từ req.body nhưng đảm bảo lấy đúng các trường
+    const updateData = {
+      title: req.body.title,
+      description: req.body.description,
+      type: req.body.type,
+      propertyType: req.body.propertyType,
+      price: req.body.price,
+      area: req.body.area,
+      bedrooms: req.body.bedrooms,
+      bathrooms: req.body.bathrooms,
+      address: req.body.address,
+      city: req.body.city,
+      district: req.body.district,
+      ward: req.body.ward,
+      images: finalImages,
+    };
+
+    const updatedListing = await this.listingService.update(id, req.userId, updateData);
+
+    res.json({
+      success: true,
+      message: "Cập nhật thành công. Bài đăng đã được gửi lại để duyệt.",
+      data: updatedListing,
+    });
   });
-});
 
-  // 6. Xóa tin (Thêm từ nhánh 'than')
+  // 6. Xóa tin
   deleteListing = asyncHandler(async (req, res) => {
     const { id } = req.params;
     await this.listingService.delete(id, req.userId);

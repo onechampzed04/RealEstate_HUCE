@@ -3,6 +3,11 @@ import axios from 'axios';
 
 const BASE_URL = 'http://localhost:5001/api';
 
+const getNoCacheUrl = (url: string) => {
+    const separator = url.includes('?') ? '&' : '?';
+    return `${url}${separator}t=${new Date().getTime()}`;
+};
+
 async function handleResponse(response: Response) {
     const data = await response.json();
     if (!response.ok) {
@@ -41,20 +46,23 @@ export const fetchProperties = async (
       city: city || undefined,
       type: type || undefined,
       limit: 10,
-      page
+      page,
+      t: new Date().getTime() // Cache busting cho Axios
     }
   });
   return response.data;
 };
 
 export const fetchFeaturedProperties = async (): Promise<Property[]> => {
-    const response = await fetch(`${BASE_URL}/listings`);
+    // Thêm timestamp vào URL
+    const response = await fetch(getNoCacheUrl(`${BASE_URL}/listings`));
     const data = await handleResponse(response);
     return data.listings.slice(0, 6) || [];
 };
 
+
 export const fetchPropertyById = async (id: string): Promise<Property | undefined> => {
-    const response = await fetch(`${BASE_URL}/listings/${id}`);
+    const response = await fetch(getNoCacheUrl(`${BASE_URL}/listings/${id}`));
     return handleResponse(response);
 };
 
@@ -244,15 +252,12 @@ export const fetchActivePackages = async (): Promise<any[]> => {
 };
 
 export const fetchMyActivePackage = async (token: string): Promise<any | null> => {
-    const response = await fetch(`${BASE_URL}/user-packages/my-active`, {
+    const response = await fetch(getNoCacheUrl(`${BASE_URL}/user-packages/my-active`), {
         headers: {
             'Authorization': `Bearer ${token}`,
         },
     });
-    // Gói cước có thể không tồn tại, nên cần xử lý lỗi 404 một cách nhẹ nhàng
-    if (response.status === 404) {
-        return null;
-    }
+    if (response.status === 404) return null;
     return handleResponse(response);
 };
 // api cho thanh toán
@@ -269,7 +274,7 @@ export const createPaymentLink = async (packageId: string, token: string): Promi
 };
 
 export const checkOrderStatus = async (orderCode: number, token: string): Promise<{ status: string }> => {
-    const response = await fetch(`${BASE_URL}/payments/status/${orderCode}`, {
+    const response = await fetch(getNoCacheUrl(`${BASE_URL}/payments/status/${orderCode}`), {
         headers: {
             'Authorization': `Bearer ${token}`,
         },
@@ -294,7 +299,7 @@ export interface ListingFormData {
     city: string;
     district?: string;
     ward?: string;
-    images?: string[];
+    images?: any[];
 }
 
 export interface Listing {
@@ -312,8 +317,9 @@ export interface Listing {
         city?: string;
         district?: string;
         ward?: string;
+        coordinates?: [number, number];
     };
-    images: string[];
+    images: any[];
     status: 'PENDING' | 'APPROVED' | 'REJECTED' | 'EXPIRED';
     createdAt: string;
     updatedAt: string;
@@ -321,7 +327,7 @@ export interface Listing {
 
 /** Lấy danh sách bài đăng của người dùng hiện tại */
 export const fetchMyListings = async (token: string): Promise<{ listings: Listing[]; pagination: any }> => {
-    const response = await fetch(`${BASE_URL}/listings/my-listings`, {
+    const response = await fetch(getNoCacheUrl(`${BASE_URL}/listings/my-listings`), {
         headers: { 'Authorization': `Bearer ${token}` },
     });
     return handleResponse(response);
@@ -341,14 +347,15 @@ export const createListing = async (data: ListingFormData, token: string): Promi
 };
 
 /** Cập nhật bài đăng */
-export const updateListing = async (id: string, data: Partial<ListingFormData>, token: string): Promise<Listing> => {
+export const updateListing = async (id: string, data: FormData | Partial<ListingFormData>, token: string): Promise<Listing> => {
+    const isFormData = data instanceof FormData;
     const response = await fetch(`${BASE_URL}/listings/${id}`, {
         method: 'PUT',
         headers: {
-            'Content-Type': 'application/json',
+            ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
             'Authorization': `Bearer ${token}`,
         },
-        body: JSON.stringify(data),
+        body: isFormData ? data : JSON.stringify(data),
     });
     return handleResponse(response);
 };
@@ -361,4 +368,3 @@ export const deleteListing = async (id: string, token: string): Promise<void> =>
     });
     return handleResponse(response);
 };
-

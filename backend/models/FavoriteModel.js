@@ -16,7 +16,10 @@ const favoriteSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
+<<<<<<< HEAD
 // tránh duplicate
+=======
+>>>>>>> origin/thanmoi
 favoriteSchema.index({ user: 1, listing: 1 }, { unique: true });
 
 const Favorite = mongoose.model("Favorite", favoriteSchema);

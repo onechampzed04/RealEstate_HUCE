@@ -639,7 +639,7 @@ const SubmitPropertyPage: React.FC = () => {
                     'Đăng Tin Ngay'
                   )}
                 </button>
-              </div>z
+              </div>
             </div>
           </form>
           </div>

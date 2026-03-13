@@ -25,18 +25,29 @@ const ProfilePage: React.FC = () => {
 
     const [listings, setListings] = useState<Listing[]>([]);
     const [loadingListings, setLoadingListings] = useState(true);
+
     const navigate = useNavigate();
+
+    // SET AVATAR
     useEffect(() => {
+
         if (user?.avatar) {
+
             if (typeof user.avatar === 'object' && 'url' in user.avatar) {
+
                 setUserAvatar(user.avatar.url || undefined);
+
             } else if (typeof user.avatar === 'string') {
+
                 setUserAvatar(user.avatar);
+
             }
+
         }
+
     }, [user]);
 
-    // load listings
+    // LOAD LISTINGS
     useEffect(() => {
 
         const loadListings = async () => {
@@ -44,12 +55,21 @@ const ProfilePage: React.FC = () => {
             if (!token) return;
 
             try {
+
                 const data = await fetchMyListings(token);
+
+                console.log("Listings data:", data);
+
                 setListings(data.listings || []);
+
             } catch (error) {
+
                 console.error("Lỗi lấy listings:", error);
+
             } finally {
+
                 setLoadingListings(false);
+
             }
 
         };
@@ -103,11 +123,32 @@ const ProfilePage: React.FC = () => {
 
     };
 
+    // GET IMAGE URL SAFE
+    const getImageUrl = (images: any) => {
+
+        if (!images || images.length === 0) return "/no-image.jpg";
+
+        const first = images[0];
+
+        if (typeof first === "string") return first;
+
+        if (typeof first === "object" && first.url) return first.url;
+
+        return "/no-image.jpg";
+
+    };
+
     return (
+
         <div className="max-w-7xl mx-auto py-12 px-4">
 
+            {/* HEADER */}
+
             <div className="flex justify-between items-center">
-                <h1 className="text-3xl font-bold">Hồ sơ của tôi</h1>
+
+                <h1 className="text-3xl font-bold">
+                    Hồ sơ của tôi
+                </h1>
 
                 <Button
                     size="lg"
@@ -116,7 +157,9 @@ const ProfilePage: React.FC = () => {
                 >
                     Đổi mật khẩu
                 </Button>
+
             </div>
+
 
             {/* USER INFO */}
 
@@ -141,8 +184,13 @@ const ProfilePage: React.FC = () => {
 
                 <div>
 
-                    <p className="text-2xl font-bold">{user?.name}</p>
-                    <p className="text-gray-600">{user?.email}</p>
+                    <p className="text-2xl font-bold">
+                        {user?.name}
+                    </p>
+
+                    <p className="text-gray-600">
+                        {user?.email}
+                    </p>
 
                 </div>
 
@@ -190,9 +238,10 @@ const ProfilePage: React.FC = () => {
 
                 </p>
 
+
                 {/* MY LISTINGS */}
 
-                <h2 className="text-2xl font-bold mt-10 mb-4">
+                <h2 className="text-2xl font-bold mt-10 mb-6">
                     Bất động sản của tôi
                 </h2>
 
@@ -214,48 +263,61 @@ const ProfilePage: React.FC = () => {
 
                             <div
                                 key={listing._id}
-                                className="border rounded-lg p-4 shadow hover:shadow-lg transition"
+                                className="border rounded-xl overflow-hidden shadow hover:shadow-xl transition bg-white"
                             >
 
-                                <h3 className="font-bold text-lg">
-                                    {listing.title}
-                                </h3>
+                                {/* IMAGE */}
 
-                                <p className="text-red-500 font-semibold">
+                                <div className="w-full h-48 overflow-hidden">
 
-                                    {listing.price.toLocaleString()} VND
+                                    <img
+                                        src={getImageUrl(listing.images)}
+                                        alt={listing.title}
+                                        className="w-full h-full object-cover hover:scale-105 transition duration-300"
+                                    />
 
-                                </p>
+                                </div>
 
-                                <p>
 
-                                    {listing.area} m²
+                                {/* CONTENT */}
 
-                                </p>
+                                <div className="p-4">
 
-                                <p className="text-gray-500">
+                                    <h3 className="font-bold text-lg line-clamp-2">
+                                        {listing.title}
+                                    </h3>
 
-                                    {listing.location?.city}
+                                    <p className="text-red-500 font-semibold text-lg mt-1">
+                                        {listing.price.toLocaleString()} VND
+                                    </p>
 
-                                </p>
+                                    <p className="text-gray-600">
+                                        {listing.area} m²
+                                    </p>
 
-                                <div className="flex gap-3 mt-4">
+                                    <p className="text-gray-500 text-sm">
+                                        {listing.location?.city}
+                                    </p>
+
+                                    <div className="flex gap-3 mt-5">
 
                                     <button
                                         onClick={() => navigate(`/edit-listing/${listing._id}`)}
-                                        className="flex items-center gap-1 text-blue-500"
+                                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition duration-200"
                                     >
-                                        <FaEdit />
+                                        <FaEdit className="text-sm" />
                                         Sửa
                                     </button>
 
                                     <button
                                         onClick={() => handleDelete(listing._id)}
-                                        className="flex items-center gap-1 text-red-500"
+                                        className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-red-500 rounded-lg hover:bg-red-600 transition duration-200"
                                     >
-                                        <FaTrash />
+                                        <FaTrash className="text-sm" />
                                         Xóa
                                     </button>
+
+                                    </div>
 
                                 </div>
 
@@ -299,7 +361,9 @@ const ProfilePage: React.FC = () => {
             />
 
         </div>
+
     );
+
 };
 
 export default ProfilePage;
